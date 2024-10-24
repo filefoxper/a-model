@@ -25,8 +25,8 @@ export interface FirstActionWrap extends ActionWrap {
 export interface Config {
   controlled?: boolean;
   batchNotify?: (
-    action: Action,
-    listeners: ((action: Action) => void)[]
+    listeners: ((action: Action) => void)[],
+    action: Action
   ) => void;
 }
 
@@ -41,13 +41,24 @@ export type Updater<S, T extends ModelInstance> = {
   dispatch: Dispatch | null;
   dispatches: Dispatch[];
   temporaryDispatches: Dispatch[];
-  cacheGenerators: Record<
+  cacheFields: Record<
     string,
     { value: any; deps?: unknown[]; out: { get: () => any } } | null
   >;
   cacheMethods: Record<string, (...args: unknown[]) => unknown>;
-  cacheState: { state: S } | null;
+  initialized: boolean;
   state: S;
+  config: Config;
+  initialize: (args?: { stats?: { state: S }; model?: Model<S, T> }) => void;
   notify: (action: Action | null) => void;
-  update: (partition: Partial<Updater<S, T>>) => Updater<S, T>;
+  mutate: (
+    callback: (
+      updater: Updater<S, T>,
+      effect: (effectFn: (u: Updater<S, T>) => void) => void
+    ) => Updater<S, T>
+  ) => Updater<S, T>;
+  tunnel: (dispatcher: Dispatch) => {
+    connect: () => void;
+    disconnect: () => void;
+  };
 };

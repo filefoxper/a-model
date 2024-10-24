@@ -16,6 +16,7 @@ function getDescriptors(
       },
       set: (v: any) => {
         if (!handler.set) {
+          // eslint-disable-next-line no-param-reassign
           target[key] = v;
           return;
         }
@@ -29,7 +30,7 @@ function getDescriptors(
   return result;
 }
 
-export const useSimpleProxy = <T extends Record<string, unknown>>(
+export const createSimpleProxy = <T extends Record<string, unknown>>(
   target: T,
   handler: ProxyHandler<T>
 ): T => {
@@ -50,7 +51,7 @@ export const createProxy = <T extends Record<string, any>>(
   handler: ProxyHandler<T>
 ): T => {
   if (typeof Proxy !== 'function') {
-    return useSimpleProxy(target, handler);
+    return createSimpleProxy(target, handler);
   }
   return new Proxy(target, handler);
 };
