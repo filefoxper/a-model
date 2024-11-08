@@ -15,14 +15,14 @@ export type Model<S, T extends ModelInstance> = (
   state: S
 ) => ValidInstance<S, T>;
 
-export type Action = {
+export type Action<S = any, T extends ModelInstance = ModelInstance> = {
   type: null | string;
   method: null | ((...args: any[]) => any);
   params?: any[];
-  state: any;
-  prevState?: any;
-  instance: any;
-  prevInstance?: any;
+  state: S;
+  prevState?: S;
+  instance: T;
+  prevInstance?: T;
 };
 
 export type Dispatch = (action: Action) => unknown;
@@ -46,6 +46,7 @@ export interface Config {
 }
 
 export type Updater<S, T extends ModelInstance> = {
+  sidePayload: unknown | undefined;
   version: number;
   isDestroyed: boolean;
   isSubscribing: boolean;
@@ -58,13 +59,20 @@ export type Updater<S, T extends ModelInstance> = {
   temporaryDispatches: Dispatch[];
   cacheFields: Record<
     string,
-    { value: any; deps?: unknown[]; out: { get: () => any } } | null
+    { value: any; getter: { get: () => any }; deps?: unknown[] } | null
   >;
   cacheMethods: Record<string, (...args: unknown[]) => unknown>;
   initialized: boolean;
   state: S;
-  config: Config;
-  initialize: (args?: { stats?: { state: S }; model?: Model<S, T> }) => void;
+  config?: Config;
+  payload: <R>(
+    callback?: (payload: R | undefined) => R | undefined
+  ) => R | undefined;
+  initialize: (args?: {
+    stats?: { state: S };
+    model?: Model<S, T>;
+    config?: Config;
+  }) => void;
   notify: (action: Action | null) => void;
   mutate: (
     callback: (
@@ -72,8 +80,9 @@ export type Updater<S, T extends ModelInstance> = {
       effect: (effectFn: (u: Updater<S, T>) => void) => void
     ) => Updater<S, T>
   ) => Updater<S, T>;
-  tunnel: (dispatcher: Dispatch) => {
+  createTunnel: (dispatcher: Dispatch) => {
     connect: () => void;
     disconnect: () => void;
   };
+  destroy: () => void;
 };

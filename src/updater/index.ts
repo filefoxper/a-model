@@ -1,5 +1,5 @@
 import { createNotifier } from './notifier';
-import { createTunnel, createUnInitializedUpdater } from './tunnel';
+import { createTunnel, createUnInitializedUpdater, destroy } from './tunnel';
 import type { Model, ModelInstance, Config, Updater } from './type';
 
 function createInitializedUpdater<S, T extends ModelInstance>(
@@ -7,7 +7,7 @@ function createInitializedUpdater<S, T extends ModelInstance>(
 ) {
   return {
     notify: createNotifier(updater),
-    tunnel: createTunnel(updater)
+    createTunnel: createTunnel(updater)
   };
 }
 
@@ -15,12 +15,24 @@ function createInitialize<S, T extends ModelInstance>(updater: Updater<S, T>) {
   return function initialize(args?: {
     stats?: { state: S };
     model?: Model<S, T>;
+    config?: Config;
   }) {
     updater.mutate(u => {
       const model = args ? (args.model ?? u.model) : u.model;
-      const state = args ? (args.stats ? args.stats.state : u.state) : u.state;
-      if (Object.is(u.model, model) && Object.is(u.state, state)) {
-        return { ...u, initialized: true };
+      const state =
+        args && !u.initialized
+          ? args.stats
+            ? args.stats.state
+            : u.state
+          : u.state;
+      const config = args ? (args.config ?? u.config) : u.config;
+      const nextConfig = { ...args?.config, ...config };
+      if (
+        Object.is(u.model, model) &&
+        Object.is(u.state, state) &&
+        u.initialized
+      ) {
+        return { ...u, initialized: true, config: nextConfig };
       }
       const instance = model(state);
       const initialized = createInitializedUpdater(u);
@@ -30,21 +42,31 @@ function createInitialize<S, T extends ModelInstance>(updater: Updater<S, T>) {
         state,
         initialized: true,
         instance,
+        config: nextConfig,
         ...initialized
       };
     });
   };
 }
 
+function lazyModel(state: undefined) {
+  return {};
+}
+
 export function createUpdater<S, T extends ModelInstance>(
   model: Model<S, T>,
-  defaultState: S,
-  config: Config
+  config: Config,
+  defaultState?: S
 ): Updater<S, T> {
-  const { controlled } = config;
-  const defaultInstance = model(defaultState);
+  const argLength = arguments.length;
+  const hasDefaultState = argLength > 2;
+  const { controlled } = config ?? {};
+  const defaultInstance = hasDefaultState
+    ? model(defaultState as S)
+    : (lazyModel(undefined) as T);
   const unInitializedUpdater = createUnInitializedUpdater<S, T>();
   const updater: Updater<S, T> = {
+    sidePayload: undefined,
     version: 0,
     isDestroyed: false,
     model,
@@ -54,11 +76,19 @@ export function createUpdater<S, T extends ModelInstance>(
     temporaryDispatches: [],
     cacheMethods: {},
     cacheFields: {},
-    state: defaultState,
-    initialized: false,
+    state: defaultState as S,
+    initialized: hasDefaultState,
     controlled: !!controlled,
     isSubscribing: false,
     config,
+    payload<R>(
+      setter?: (payload: R | undefined) => R | undefined
+    ): R | undefined {
+      if (typeof setter === 'function') {
+        updater.sidePayload = setter(updater.sidePayload as R);
+      }
+      return updater.sidePayload as R | undefined;
+    },
     mutate(
       callback: (
         updater: Updater<S, T>,
@@ -79,7 +109,14 @@ export function createUpdater<S, T extends ModelInstance>(
       Object.assign(updater, result);
       return updater;
     },
-    initialize: (args?: { stats?: { state: S }; model?: Model<S, T> }) => {},
+    initialize: (args?: {
+      stats?: { state: S };
+      model?: Model<S, T>;
+      config?: Config;
+    }) => {},
+    destroy() {
+      destroy(updater, true);
+    },
     ...unInitializedUpdater
   };
   const initialized = createInitializedUpdater(updater);

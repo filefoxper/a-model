@@ -10,11 +10,48 @@ import type {
 export function createUnInitializedUpdater<S, T extends ModelInstance>() {
   return {
     notify: (a: Action | null) => {},
-    tunnel: (dispatcher: Dispatch) => ({
+    createTunnel: (dispatcher: Dispatch) => ({
       connect: noop,
       disconnect: noop
     })
   };
+}
+
+export function destroy<S, T extends ModelInstance>(
+  updater: Updater<S, T>,
+  force?: boolean
+) {
+  function destroyDispatching() {
+    updater.mutate(u => {
+      const { dispatching } = u;
+      if (!dispatching) {
+        return u;
+      }
+      let wrapper: ActionWrap | undefined = dispatching;
+      while (wrapper) {
+        const { next } = wrapper as ActionWrap;
+        wrapper.next = undefined;
+        wrapper.prev = undefined;
+        if (next) {
+          next.prev = undefined;
+        }
+        wrapper = next;
+      }
+      dispatching.tail = undefined;
+      return { ...u, dispatching: undefined, initialized: false };
+    });
+  }
+  updater.mutate((u, effect) => {
+    const ds = [...u.dispatches, ...u.temporaryDispatches];
+    if (ds.length && !force) {
+      return u;
+    }
+    const destroyed = createUnInitializedUpdater<S, T>();
+    effect(() => {
+      destroyDispatching();
+    });
+    return { ...u, ...destroyed, sidePayload: undefined, isDestroyed: true };
+  });
 }
 
 export function createTunnel<S, T extends ModelInstance>(
@@ -86,37 +123,7 @@ export function createTunnel<S, T extends ModelInstance>(
       });
     }
     function tryDestroy() {
-      function destroyDispatching() {
-        updater.mutate(u => {
-          const { dispatching } = u;
-          if (!dispatching) {
-            return u;
-          }
-          let wrapper: ActionWrap | undefined = dispatching;
-          while (wrapper) {
-            const { next } = wrapper as ActionWrap;
-            wrapper.next = undefined;
-            wrapper.prev = undefined;
-            if (next) {
-              next.prev = undefined;
-            }
-            wrapper = next;
-          }
-          dispatching.tail = undefined;
-          return { ...u, dispatching: undefined, initialized: false };
-        });
-      }
-      updater.mutate((u, effect) => {
-        const ds = [...u.dispatches, ...u.temporaryDispatches];
-        if (ds.length) {
-          return u;
-        }
-        const destroyed = createUnInitializedUpdater<S, T>();
-        effect(() => {
-          destroyDispatching();
-        });
-        return { ...u, ...destroyed, isDestroyed: true };
-      });
+      destroy(updater);
     }
     return {
       connect() {
