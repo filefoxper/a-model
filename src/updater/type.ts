@@ -37,12 +37,13 @@ export interface FirstActionWrap extends ActionWrap {
   tail: ActionWrap | undefined;
 }
 
-export interface Config {
+export interface Config<S> {
   controlled?: boolean;
   batchNotify?: (
     listeners: ((action: Action) => void)[],
     action: Action
   ) => void;
+  state?: S;
 }
 
 export type Updater<S, T extends ModelInstance> = {
@@ -64,15 +65,11 @@ export type Updater<S, T extends ModelInstance> = {
   cacheMethods: Record<string, (...args: unknown[]) => unknown>;
   initialized: boolean;
   state: S;
-  config?: Config;
+  config: Config<S>;
   payload: <R>(
     callback?: (payload: R | undefined) => R | undefined
   ) => R | undefined;
-  initialize: (args?: {
-    stats?: { state: S };
-    model?: Model<S, T>;
-    config?: Config;
-  }) => void;
+  update: (args?: { model?: Model<S, T>; config?: Config<S> }) => void;
   notify: (action: Action | null) => void;
   mutate: (
     callback: (

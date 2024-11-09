@@ -11,39 +11,50 @@ function createInitializedUpdater<S, T extends ModelInstance>(
   };
 }
 
-function createInitialize<S, T extends ModelInstance>(updater: Updater<S, T>) {
-  return function initialize(args?: {
-    stats?: { state: S };
-    model?: Model<S, T>;
-    config?: Config;
-  }) {
-    updater.mutate(u => {
+function createUpdateFn<S, T extends ModelInstance>(updater: Updater<S, T>) {
+  return function update(args?: { model?: Model<S, T>; config?: Config<S> }) {
+    updater.mutate((u, effect): Updater<S, T> => {
       const model = args ? (args.model ?? u.model) : u.model;
-      const state =
-        args && !u.initialized
-          ? args.stats
-            ? args.stats.state
-            : u.state
-          : u.state;
-      const config = args ? (args.config ?? u.config) : u.config;
-      const nextConfig = { ...args?.config, ...config };
-      if (
-        Object.is(u.model, model) &&
-        Object.is(u.state, state) &&
-        u.initialized
-      ) {
-        return { ...u, initialized: true, config: nextConfig };
+      const sourceConfig = args?.config;
+      const config = sourceConfig || {};
+      const state = 'state' in config ? (config.state as S) : u.state;
+      if (u.isDestroyed) {
+        return u;
       }
-      const instance = model(state);
-      const initialized = createInitializedUpdater(u);
+      const nextConfig = sourceConfig ? { ...u.config, ...config } : u.config;
+      if (!u.initialized) {
+        const instance = model(state);
+        const initializedUpdater = createInitializedUpdater(u);
+        return {
+          ...u,
+          model,
+          state,
+          instance,
+          config: nextConfig,
+          initialized: true,
+          ...initializedUpdater
+        };
+      }
+      if (Object.is(u.model, model)) {
+        return sourceConfig ? { ...u, config: nextConfig } : u;
+      }
+      const instance = model(u.state);
+      effect(up => {
+        up.notify({
+          type: null,
+          method: null,
+          prevInstance: u.instance,
+          instance,
+          prevState: u.state,
+          state: u.state
+        });
+      });
       return {
         ...u,
         model,
-        state,
-        initialized: true,
         instance,
         config: nextConfig,
-        ...initialized
+        initialized: true
       };
     });
   };
@@ -55,12 +66,10 @@ function lazyModel(state: undefined) {
 
 export function createUpdater<S, T extends ModelInstance>(
   model: Model<S, T>,
-  config: Config,
-  defaultState?: S
+  config: Config<S> = {}
 ): Updater<S, T> {
-  const argLength = arguments.length;
-  const hasDefaultState = argLength > 2;
-  const { controlled } = config ?? {};
+  const hasDefaultState = 'defaultState' in config;
+  const { controlled, state: defaultState } = config;
   const defaultInstance = hasDefaultState
     ? model(defaultState as S)
     : (lazyModel(undefined) as T);
@@ -109,11 +118,7 @@ export function createUpdater<S, T extends ModelInstance>(
       Object.assign(updater, result);
       return updater;
     },
-    initialize: (args?: {
-      stats?: { state: S };
-      model?: Model<S, T>;
-      config?: Config;
-    }) => {},
+    update: (args?: { model?: Model<S, T>; config?: Config<S> }) => {},
     destroy() {
       destroy(updater, true);
     },
@@ -121,7 +126,7 @@ export function createUpdater<S, T extends ModelInstance>(
   };
   const initialized = createInitializedUpdater(updater);
   Object.assign(updater, initialized, {
-    initialize: createInitialize(updater)
+    update: createUpdateFn(updater)
   });
   return updater;
 }

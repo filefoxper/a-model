@@ -38,11 +38,7 @@ export interface Store<S, T extends ModelInstance> {
     };
   };
   getInstance: () => T;
-  initialize: (args?: {
-    stats?: { state: S };
-    model?: Model<S, T>;
-    config?: Config;
-  }) => void;
+  update: (args?: { model?: Model<S, T>; config?: Config<S> }) => void;
   payload: <R>(
     callback?: (payload: R | undefined) => R | undefined
   ) => R | undefined;

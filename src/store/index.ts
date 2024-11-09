@@ -12,13 +12,9 @@ import type {
 
 export function createStore<S, T extends ModelInstance>(
   model: Model<S, T>,
-  config: Config,
-  defaultState?: S
+  config: Config<S> = {}
 ) {
-  const hasDefaultState = arguments.length > 2;
-  const updater = hasDefaultState
-    ? createUpdater(model, config, defaultState)
-    : createUpdater(model, config);
+  const updater = createUpdater(model, config);
   const store: Store<S, T> = {
     updater,
     createTunnel(dispatcher: Dispatch) {
@@ -102,12 +98,8 @@ export function createStore<S, T extends ModelInstance>(
     getInstance(): T {
       return extractInstance(updater);
     },
-    initialize(args?: {
-      stats?: { state: S };
-      model?: Model<S, T>;
-      config?: Config;
-    }) {
-      updater.initialize(args);
+    update(args?: { model?: Model<S, T>; config?: Config<S> }) {
+      updater.update(args);
     },
     payload<R>(
       callback?: (payload: R | undefined) => R | undefined
@@ -130,9 +122,9 @@ export function createKey<S, T extends ModelInstance>(
   const wrapModel = function wrapModel(state: S) {
     return model(state);
   };
-  wrapModel.createStore = function createWrapModelStore(config?: Config) {
+  wrapModel.createStore = function createWrapModelStore(config?: Config<S>) {
     return hasDefaultState
-      ? createStore(wrapModel, config || {}, defaultState)
+      ? createStore(wrapModel, { ...config, state: defaultState })
       : createStore(wrapModel, config || {});
   };
   wrapModel.source = model;
