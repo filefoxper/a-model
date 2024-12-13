@@ -1,7 +1,12 @@
 import { createUpdater } from '../updater';
 import { shallowEqual } from '../tools';
-import { cacheIdentify, extractInstance } from './instance';
-import type { Store } from './type';
+import {
+  cacheIdentify,
+  extractInstance,
+  createField as createInstanceField,
+  createMethod as createInstanceMethod
+} from './instance';
+import type { Connection, ConnectionKey } from './type';
 import type {
   Action,
   Config,
@@ -10,12 +15,12 @@ import type {
   ModelInstance
 } from '../updater/type';
 
-export function createStore<S, T extends ModelInstance>(
+export function createConnection<S, T extends ModelInstance>(
   model: Model<S, T>,
   config: Config<S> = {}
-) {
+): Connection<S, T> {
   const updater = createUpdater(model, config);
-  const store: Store<S, T> = {
+  const connection: Connection<S, T> = {
     updater,
     createTunnel(dispatcher: Dispatch) {
       const tunnel = updater.createTunnel(dispatcher);
@@ -87,8 +92,8 @@ export function createStore<S, T extends ModelInstance>(
           signal.stopStatistics = function stopStatistics() {
             signalStore.enabled = false;
           };
-          signal.getStore = function getStore() {
-            return store;
+          signal.getConnection = function getConnection() {
+            return connection;
           };
           signalStore.enabled = true;
           return signal;
@@ -107,7 +112,7 @@ export function createStore<S, T extends ModelInstance>(
       return updater.payload<R>(callback);
     }
   };
-  return store;
+  return connection;
 }
 
 function modelKeyIdentifier() {
@@ -117,15 +122,17 @@ function modelKeyIdentifier() {
 export function createKey<S, T extends ModelInstance>(
   model: Model<S, T>,
   defaultState?: S
-) {
+): ConnectionKey<S, T, typeof model> {
   const hasDefaultState = arguments.length > 1;
   const wrapModel = function wrapModel(state: S) {
     return model(state);
   };
-  wrapModel.createStore = function createWrapModelStore(config?: Config<S>) {
+  wrapModel.createConnection = function createModelConnection(
+    config?: Config<S>
+  ) {
     return hasDefaultState
-      ? createStore(wrapModel, { ...config, state: defaultState })
-      : createStore(wrapModel, config || {});
+      ? createConnection(wrapModel, { ...config, state: defaultState })
+      : createConnection(wrapModel, config || {});
   };
   wrapModel.source = model;
   wrapModel.modelKeyIdentifier = modelKeyIdentifier;
@@ -138,3 +145,7 @@ createKey.isModelKey = function isModelKey(data: unknown) {
   }
   return (data as any).modelKeyIdentifier === modelKeyIdentifier;
 };
+
+export const createField = createInstanceField;
+
+export const createMethod = createInstanceMethod;

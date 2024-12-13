@@ -20,7 +20,7 @@ export type MethodStructure<
   identifier: (d: unknown) => d is MethodStructure;
 };
 
-export interface Store<S, T extends ModelInstance> {
+export interface Connection<S, T extends ModelInstance> {
   updater: Updater<S, T>;
   createTunnel: (dispatcher: Dispatch) => {
     connect: () => void;
@@ -34,7 +34,7 @@ export interface Store<S, T extends ModelInstance> {
       (): T;
       startStatistics: () => void;
       stopStatistics: () => void;
-      getStore: () => Store<S, T>;
+      getConnection: () => Connection<S, T>;
     };
   };
   getInstance: () => T;
@@ -42,4 +42,14 @@ export interface Store<S, T extends ModelInstance> {
   payload: <R>(
     callback?: (payload: R | undefined) => R | undefined
   ) => R | undefined;
+}
+
+export interface ConnectionKey<
+  S,
+  T extends ModelInstance,
+  M extends Model<S, T> = Model<S, T>
+> {
+  source: M;
+  createConnection: () => Connection<S, T>;
+  modelKeyIdentifier: () => boolean;
 }

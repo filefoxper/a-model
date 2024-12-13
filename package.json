@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "a-modelt",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "This is a model state management tool",
   "license": "MIT",
   "author": "Jimmy.Harding",

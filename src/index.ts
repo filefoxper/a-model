@@ -1,1 +1,3 @@
-export { createKey, createStore } from './store';
+export { createKey, createConnection } from './connection';
+
+export { model } from './model';
