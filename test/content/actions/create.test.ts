@@ -153,10 +153,10 @@ describe('通过tunnel创建监听管道', () => {
           return;
         }
         disconnect();
+        expect(connection.updater.dispatching).toBeUndefined();
       }
     );
     connect();
     getInstance().increase();
-    expect(connection.updater.dispatches.length).toBe(0);
   });
 });
