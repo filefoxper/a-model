@@ -1,4 +1,5 @@
-import { createField, createKey, createMethod } from '../connection';
+import { createField, createMethod } from '../connection';
+import { createStore as createStoreObject } from '../store';
 import type { Model, ModelInstance } from '../updater/type';
 
 export const model = function model<S, T extends ModelInstance>(
@@ -7,19 +8,12 @@ export const model = function model<S, T extends ModelInstance>(
   const modelWrapper = function modelWrapper(state: S) {
     return modelFn(state);
   };
-  function createStore(state?: S) {
+  modelWrapper.createStore = function createStore(state?: S) {
     const hasDefaultState = arguments.length > 0;
-    const key = hasDefaultState
-      ? createKey(modelWrapper, state)
-      : createKey(modelWrapper);
-    return {
-      key,
-      static() {
-        return key.createConnection();
-      }
-    };
-  }
-  modelWrapper.createStore = createStore;
+    return hasDefaultState
+      ? createStoreObject(modelWrapper, state)
+      : createStoreObject(modelWrapper);
+  };
   return modelWrapper;
 };
 

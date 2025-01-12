@@ -1,3 +1,4 @@
+import { createNoStateModel } from '../validation';
 import { createNotifier } from './notifier';
 import { createTunnel, createUnInitializedUpdater, destroy } from './tunnel';
 import type { Model, ModelInstance, Config, Updater } from './type';
@@ -60,19 +61,17 @@ function createUpdateFn<S, T extends ModelInstance>(updater: Updater<S, T>) {
   };
 }
 
-function lazyModel(state: undefined) {
-  return {};
-}
+const lazyModel = createNoStateModel();
 
 export function createUpdater<S, T extends ModelInstance>(
   model: Model<S, T>,
   config: Config<S> = {}
 ): Updater<S, T> {
-  const hasDefaultState = 'defaultState' in config;
+  const hasDefaultState = 'state' in config;
   const { controlled, state: defaultState } = config;
   const defaultInstance = hasDefaultState
     ? model(defaultState as S)
-    : (lazyModel(undefined) as T);
+    : (lazyModel(undefined) as unknown as T);
   const unInitializedUpdater = createUnInitializedUpdater<S, T>();
   const updater: Updater<S, T> = {
     sidePayload: undefined,
@@ -111,11 +110,12 @@ export function createUpdater<S, T extends ModelInstance>(
       const result = callback(updater, (effectFn: (u: Updater<S, T>) => void) =>
         effects.push(effectFn)
       );
-      runEffects(result);
       if (updater === result) {
+        runEffects(result);
         return updater;
       }
       Object.assign(updater, result);
+      runEffects(updater);
       return updater;
     },
     update: (args?: { model?: Model<S, T>; config?: Config<S> }) => {},

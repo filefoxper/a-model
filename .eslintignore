@@ -1,5 +1,4 @@
 .eslintrc.js
-test/
 es/
 esm/
 dist/
