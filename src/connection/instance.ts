@@ -1,4 +1,4 @@
-import { createSimpleProxy, shallowEqual } from '../tools';
+import { createProxy, shallowEqual } from '../tools';
 import type { FieldStructure, MethodStructure } from './type';
 import type { Action, ModelInstance, Updater } from '../updater/type';
 
@@ -143,20 +143,28 @@ function wrapToField<S, T extends ModelInstance>(
   }
   const getter = {
     get() {
-      const current = field.get();
+      const currentField = updater.instance[propertyName];
+      if (!cacheIdentify.field(currentField)) {
+        throw new Error('Field should always be field.');
+      }
+      const current = currentField.get();
       const fieldInCache = updater.cacheFields[propertyName];
-      if (!field.deps || fieldInCache == null) {
+      if (!currentField.deps || fieldInCache == null) {
         cacheFields[propertyName] = {
           getter,
           value: current,
-          deps: field.deps
+          deps: currentField.deps
         };
         return current;
       }
-      if (shallowEqual(field.deps, fieldInCache.deps)) {
+      if (shallowEqual(currentField.deps, fieldInCache.deps)) {
         return fieldInCache.value;
       }
-      cacheFields[propertyName] = { getter, value: current, deps: field.deps };
+      cacheFields[propertyName] = {
+        getter,
+        value: current,
+        deps: currentField.deps
+      };
       return current;
     }
   };
@@ -179,7 +187,7 @@ export function extractInstance<S, T extends ModelInstance>(
     }
     onGet(key, value);
   };
-  return createSimpleProxy(instance, {
+  return createProxy(instance, {
     get(target: T, p: string, receiver: any): any {
       const value = target[p];
       // 行为方法只代理非继承的自身方法

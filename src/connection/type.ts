@@ -39,17 +39,20 @@ export interface Connection<S, T extends ModelInstance> {
   };
   getInstance: () => T;
   update: (args?: { model?: Model<S, T>; config?: Config<S> }) => void;
+  destroy: () => void;
   payload: <R>(
     callback?: (payload: R | undefined) => R | undefined
   ) => R | undefined;
 }
 
 export interface ConnectionKey<
-  S,
-  T extends ModelInstance,
-  M extends Model<S, T> = Model<S, T>
+  S = any,
+  T extends ModelInstance = any,
+  M extends Model<S, T> = any
 > {
+  (s: S): T;
   source: M;
   createConnection: () => Connection<S, T>;
+  createStore: () => { get: () => Connection<S, T>; destroy: () => void };
   modelKeyIdentifier: () => boolean;
 }

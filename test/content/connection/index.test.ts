@@ -1,5 +1,6 @@
 // eslint-disable-next-line import/no-unresolved
 import { create, validations } from '@test/../src/index';
+import { noop } from '../../../src/tools';
 
 const counter = function counter(state: number) {
   return {
@@ -52,9 +53,26 @@ describe('通过create创建基本模型实例', () => {
       [0, 1]
     );
   });
+
+  test('通过payload方法可以为库对象增加额外辅助数据，该数据同样可以通过payload方法在任何可以访问到链接的地方提取', () => {
+    const records: string[] = [];
+    const connection = create(counter, { state: 0 });
+    const tunnel = connection.createTunnel(a => {
+      if (a.type == null) {
+        return;
+      }
+      records.push(a.type);
+    });
+    tunnel.connect();
+    const { increase } = tunnel.getInstance();
+    connection.payload(d => records);
+    increase();
+    expect(connection.payload() as string[]).toBe(records);
+    tunnel.disconnect();
+  });
 });
 
-describe('通过tunnel创建监听管道', () => {
+describe('通过tunnel创建模型信号管道', () => {
   test('通过tunnel.connect接口可以监听行为的发生', () => {
     const connection = create(counter, { state: 0 });
     const actionRecords = [];
@@ -158,5 +176,82 @@ describe('通过tunnel创建监听管道', () => {
     );
     connect();
     getInstance().increase();
+  });
+});
+
+describe('通过signal创建模型信号节点', () => {
+  test('signal模型信号节点，通过统计行为发生前后被访问的实例字段是否发生改变来决定是否触发监听函数，我们称之为信号优化算法', () => {
+    const actions: string[] = [];
+    const { connect, disconnect, getSignal } = create(counter, {
+      state: 0
+    }).createSignal(action => {
+      if (!action.type) {
+        return;
+      }
+      actions.push(action.type);
+    });
+    connect();
+    const signal = getSignal();
+    const { symbol: s, increase } = signal();
+    increase();
+    const { symbol: s1 } = signal();
+    increase();
+    const { symbol: s2 } = signal();
+    increase();
+    expect(actions.length).toBe(1);
+    disconnect();
+  });
+
+  test('signal模型信号生成函数的 getConnection 方法，可以额外获取模型信号与库之间链接对象', () => {
+    const actions: string[] = [];
+    const { connect, disconnect, getSignal } = create(counter, {
+      state: 0
+    }).createSignal(noop);
+    const signal = getSignal();
+    const connection = signal.getConnection();
+    const tunnel = connection.createTunnel(action => {
+      if (action.type == null) {
+        return;
+      }
+      actions.push(action.type);
+    });
+    connect();
+    tunnel.connect();
+    const { symbol: s, increase } = signal();
+    increase();
+    const { symbol: s1 } = signal();
+    increase();
+    const { symbol: s2 } = signal();
+    increase();
+    expect(actions.length).toBe(3);
+    tunnel.disconnect();
+    disconnect();
+  });
+
+  test('signal模型信号生成函数的优化算法可以通过 startStatistics 和 stopStatistics 方法进行人工优化', () => {
+    const actions: string[] = [];
+    const { connect, disconnect, getSignal } = create(counter, {
+      state: 0
+    }).createSignal(action => {
+      if (!action.type) {
+        return;
+      }
+      actions.push(action.type);
+    });
+    connect();
+    const signal = getSignal();
+    signal.stopStatistics();
+    const { count: c, increase } = signal();
+    increase();
+    signal.startStatistics();
+    const { symbol: s } = signal();
+    increase();
+    const { symbol: s1 } = signal();
+    increase();
+    signal.stopStatistics();
+    const { count: c1 } = signal();
+    increase();
+    expect(actions.length).toBe(1);
+    disconnect();
   });
 });

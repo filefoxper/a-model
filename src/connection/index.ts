@@ -6,7 +6,7 @@ import {
   createField as createInstanceField,
   createMethod as createInstanceMethod
 } from './instance';
-import type { Connection, ConnectionKey } from './type';
+import type { Connection } from './type';
 import type {
   Action,
   Config,
@@ -106,6 +106,9 @@ export function createConnection<S, T extends ModelInstance>(
     update(args?: { model?: Model<S, T>; config?: Config<S> }) {
       updater.update(args);
     },
+    destroy() {
+      updater.destroy();
+    },
     payload<R>(
       callback?: (payload: R | undefined) => R | undefined
     ): R | undefined {
@@ -114,37 +117,6 @@ export function createConnection<S, T extends ModelInstance>(
   };
   return connection;
 }
-
-function modelKeyIdentifier() {
-  return true;
-}
-
-export function createKey<S, T extends ModelInstance>(
-  model: Model<S, T>,
-  defaultState?: S
-): ConnectionKey<S, T, typeof model> {
-  const hasDefaultState = arguments.length > 1;
-  const wrapModel = function wrapModel(state: S) {
-    return model(state);
-  };
-  wrapModel.createConnection = function createModelConnection(
-    config?: Config<S>
-  ) {
-    return hasDefaultState
-      ? createConnection(wrapModel, { ...config, state: defaultState })
-      : createConnection(wrapModel, config || {});
-  };
-  wrapModel.source = model;
-  wrapModel.modelKeyIdentifier = modelKeyIdentifier;
-  return wrapModel;
-}
-
-createKey.isModelKey = function isModelKey(data: unknown) {
-  if (!data) {
-    return false;
-  }
-  return (data as any).modelKeyIdentifier === modelKeyIdentifier;
-};
 
 export const createField = createInstanceField;
 
