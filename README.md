@@ -2,14 +2,14 @@
 [![NPM downloads][npm-downloads-image]][npm-url]
 [![standard][standard-image]][standard-url]
 
-[npm-image]: https://img.shields.io/npm/v/a-model.svg?style=flat-square
-[npm-url]: https://www.npmjs.com/package/a-model
+[npm-image]: https://img.shields.io/npm/v/as-model.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/as-model
 [standard-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square
 [standard-url]: http://npm.im/standard
-[npm-downloads-image]: https://img.shields.io/npm/dm/a-model.svg?style=flat-square
+[npm-downloads-image]: https://img.shields.io/npm/dm/as-model.svg?style=flat-square
 
 
-# a-model
+# as-model
 
 This is a simple state management library with model coding style for javascript/typescript.
 
@@ -43,7 +43,7 @@ Create store:
 ```js
 // store.js
 import {counting} from './model';
-import {createStore} from 'a-model';
+import {createStore} from 'as-model';
 
 // Create and initialize a model store.
 const store = createStore(counting, 0); 
@@ -59,7 +59,7 @@ Create multiple stores:
 
 ```js
 import {counting} from './model';
-import {createKey, createStores} from 'a-model';
+import {createKey, createStores} from 'as-model';
 
 // Create model key with initial state.
 const countingKey0 = createKey(counting, 0);
@@ -79,7 +79,7 @@ Use **model** API to create store or key.
 
 ```js
 import {counting} from './model';
-import {model} from 'a-model';
+import {model} from 'as-model';
 
 const store = model(counting).createStore(0);
 const key = model(counting).createKey(0);
@@ -90,7 +90,7 @@ In typescript develop environment, `model` API can do a type check for making su
 
 ```js
 // ts
-import {model} from 'a-model';
+import {model} from 'as-model';
 
 // The model api ensures every action method returns a same type value with model state.
 const counting = model((state: number)=>{
@@ -115,7 +115,7 @@ Sync store
 
 ```js
 import {counting} from './model';
-import {model} from 'a-model';
+import {model} from 'as-model';
 
 const store = model(counting).createStore(0);
 const {getInstance} = store;
@@ -131,7 +131,7 @@ unsubscribe();
 Sync store with state in react hooks:
 
 ```js
-import {model, createStores} from 'a-model';
+import {model, createStores} from 'as-model';
 import {
     createContext, 
     useRef, 
