@@ -1,45 +1,57 @@
 import { createNoStateModel } from '../validation';
-import { createNotifier } from './notifier';
-import { createTunnel, createUnInitializedUpdater, destroy } from './tunnel';
-import type { Model, ModelInstance, Config, Updater } from './type';
+import { generateNotifier } from './notifier';
+import {
+  generateTunnelCreator,
+  createUnInitializedUpdater,
+  destroy
+} from './tunnel';
+import type { Model, ModelInstance, Updater, StateConfig } from './type';
 
 function createInitializedUpdater<S, T extends ModelInstance>(
   updater: Updater<S, T>
 ) {
+  const createTunnel = generateTunnelCreator(updater);
   return {
-    notify: createNotifier(updater),
-    createTunnel: createTunnel(updater)
+    notify: generateNotifier(updater),
+    createTunnel
   };
 }
 
 function createUpdateFn<S, T extends ModelInstance>(updater: Updater<S, T>) {
-  return function update(args?: { model?: Model<S, T>; config?: Config<S> }) {
+  return function update(
+    args: { model?: Model<S, T>; initialState?: S; state?: S } = {}
+  ) {
     updater.mutate((u, effect): Updater<S, T> => {
-      const model = args ? (args.model ?? u.model) : u.model;
-      const sourceConfig = args?.config;
-      const config = sourceConfig || {};
-      const state = 'state' in config ? (config.state as S) : u.state;
+      const model = args.model ?? u.model;
+      const initialState =
+        'initialState' in args ? (args.initialState as S) : u.state;
+      const state = 'state' in args ? (args.state as S) : u.state;
+      if (u.controlled) {
+        const instance = model(state);
+        return { ...u, state, instance, model };
+      }
       if (u.isDestroyed) {
         return u;
       }
-      const nextConfig = sourceConfig ? { ...u.config, ...config } : u.config;
+      if (!u.initialized && !('initialState' in args)) {
+        throw new Error('Should update initialState first.');
+      }
       if (!u.initialized) {
-        const instance = model(state);
+        const instance = model(initialState);
         const initializedUpdater = createInitializedUpdater(u);
         return {
           ...u,
           model,
-          state,
+          state: initialState,
           instance,
-          config: nextConfig,
           initialized: true,
           ...initializedUpdater
         };
       }
-      if (Object.is(u.model, model)) {
-        return sourceConfig ? { ...u, config: nextConfig } : u;
+      if (Object.is(u.model, model) && Object.is(u.state, state)) {
+        return u;
       }
-      const instance = model(u.state);
+      const instance = model(state);
       effect(up => {
         up.notify({
           type: null,
@@ -47,14 +59,14 @@ function createUpdateFn<S, T extends ModelInstance>(updater: Updater<S, T>) {
           prevInstance: u.instance,
           instance,
           prevState: u.state,
-          state: u.state
+          state
         });
       });
       return {
         ...u,
+        state,
         model,
         instance,
-        config: nextConfig,
         initialized: true
       };
     });
@@ -65,7 +77,7 @@ const lazyModel = createNoStateModel();
 
 export function createUpdater<S, T extends ModelInstance>(
   model: Model<S, T>,
-  config: Config<S> = {}
+  config: StateConfig<S> = {}
 ): Updater<S, T> {
   const hasDefaultState = 'state' in config;
   const { controlled, state: defaultState } = config;
@@ -118,9 +130,9 @@ export function createUpdater<S, T extends ModelInstance>(
       runEffects(updater);
       return updater;
     },
-    update: (args?: { model?: Model<S, T>; config?: Config<S> }) => {},
+    update: (args?: { model?: Model<S, T>; state?: S; initialState?: S }) => {},
     destroy() {
-      destroy(updater, true);
+      destroy(updater);
     },
     ...unInitializedUpdater
   };

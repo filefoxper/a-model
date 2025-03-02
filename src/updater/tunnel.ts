@@ -17,10 +17,7 @@ export function createUnInitializedUpdater<S, T extends ModelInstance>() {
   };
 }
 
-export function destroy<S, T extends ModelInstance>(
-  updater: Updater<S, T>,
-  force?: boolean
-) {
+export function destroy<S, T extends ModelInstance>(updater: Updater<S, T>) {
   function destroyDispatching() {
     updater.mutate(u => {
       const { dispatching } = u;
@@ -42,10 +39,6 @@ export function destroy<S, T extends ModelInstance>(
     });
   }
   updater.mutate((u, effect) => {
-    const ds = [...u.dispatches, ...u.temporaryDispatches];
-    if (ds.length && !force) {
-      return u;
-    }
     const destroyed = createUnInitializedUpdater<S, T>();
     effect(() => {
       destroyDispatching();
@@ -54,7 +47,7 @@ export function destroy<S, T extends ModelInstance>(
   });
 }
 
-export function createTunnel<S, T extends ModelInstance>(
+export function generateTunnelCreator<S, T extends ModelInstance>(
   updater: Updater<S, T>
 ) {
   function subscribe(dispatchFn: Dispatch) {
@@ -122,16 +115,12 @@ export function createTunnel<S, T extends ModelInstance>(
         };
       });
     }
-    function tryDestroy() {
-      destroy(updater);
-    }
     return {
       connect() {
         subscribe(dispatcher);
       },
       disconnect() {
         disconnect();
-        tryDestroy();
       }
     };
   };

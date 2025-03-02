@@ -13,7 +13,7 @@ function defaultNotifyImplement(dispatches: Dispatch[], action: Action) {
   });
 }
 
-export function createNotifier<S, T extends ModelInstance>(
+export function generateNotifier<S, T extends ModelInstance>(
   updater: Updater<S, T>
 ) {
   function pendAction(value: Action) {

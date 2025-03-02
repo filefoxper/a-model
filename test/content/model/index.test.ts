@@ -1,6 +1,8 @@
-import { model } from '../../../src';
+import { config } from '../../../src';
 
-describe('模型方法model是常用API的集成点', () => {
+const { model } = config();
+
+describe('model', () => {
   const counter = function counter(state: number) {
     return {
       count: state,
@@ -14,30 +16,20 @@ describe('模型方法model是常用API的集成点', () => {
     };
   };
 
-  test('model方法可直接创建connection', () => {
-    const { getInstance } = model(counter).createConnection({ state: 0 });
+  test('使用model API，可直接创建库', () => {
+    const { getInstance } = model(counter).createStore(0);
     const { increase } = getInstance();
     increase();
     expect(getInstance().count).toBe(1);
   });
 
-  test('model方法可以直接创建模型键', () => {
+  test('使用model API，可直接创建模型键', () => {
     const key = model(counter).createKey(0);
-    const store = key.createStore();
-    const { getInstance } = store.get();
+    const { getInstance, destroy } = key.createStore();
     const { increase } = getInstance();
     increase();
     expect(getInstance().count).toBe(1);
-    store.destroy();
-  });
-
-  test('model方法创建库', () => {
-    const store = model(counter).createKey(0).createStore();
-    const { getInstance } = store.get();
-    const { increase } = getInstance();
-    increase();
-    expect(getInstance().count).toBe(1);
-    store.destroy();
+    destroy();
   });
 });
 
@@ -54,48 +46,53 @@ describe('model.createField', () => {
       },
       decrease() {
         return state - 1;
-      }
+      },
+      sum: model.createMethod((...params: number[]) => {
+        return params.reduce((r, c) => r + c, state);
+      })
     };
   };
 
-  test('通过 model.createField 创建的字段，只能通过字段的 get 方法获取值', () => {
-    const { info } = model(counter)
-      .createConnection({ state: 0 })
-      .getInstance();
+  test('使用 model.createField 创建的字段，只能通过它的 get 方法获取值', () => {
+    const { info } = model(counter).createStore(0).getInstance();
     const { symbol } = info.get();
     expect(symbol).toBe('');
   });
 
-  test('通过 model.createField 创建的字段的 get 方法获取的值保持最新', () => {
+  test('使用 model.createField 创建的字段，使用其 get 方法获取的值保持最新', () => {
     const symbols: string[] = [];
-    const { info, increase } = model(counter)
-      .createConnection({ state: 0 })
-      .getInstance();
+    const { info, increase } = model(counter).createStore(0).getInstance();
     symbols.push(info.get().symbol);
     increase();
     symbols.push(info.get().symbol);
     expect(symbols).toEqual(['', '+']);
   });
 
-  test('通过 model.createField 在无缓存依赖的环境下创建的字段无缓存效应', () => {
+  test('使用 model.createField 创建的字段，若无依赖项，则其get方法获取的值始终保持最新', () => {
     const symbols: any[] = [];
-    const { info, increase } = model(counter)
-      .createConnection({ state: 1 })
-      .getInstance();
+    const { info, increase } = model(counter).createStore(2).getInstance();
     symbols.push(info.get());
     increase();
     symbols.push(info.get());
     expect(symbols[0]).not.toBe(symbols[1]);
   });
 
-  test('通过 model.createField 在有缓存依赖的环境下创建的字段值根据缓存依赖决定是否获取缓存值', () => {
+  test('使用 model.createField 创建的字段，若依赖了缓存列表，则其get值根据依赖项进行缓存', () => {
     const symbols: any[] = [];
-    const { cacheInfo, increase } = model(counter)
-      .createConnection({ state: 1 })
-      .getInstance();
+    const { cacheInfo, decrease } = model(counter).createStore(2).getInstance();
     symbols.push(cacheInfo.get());
-    increase();
+    decrease();
+    symbols.push(cacheInfo.get());
+    decrease();
     symbols.push(cacheInfo.get());
     expect(symbols[0]).toBe(symbols[1]);
+  });
+
+  test('使用 model.createMethod 可以创建一个不会改变状态的非行为方法', () => {
+    const store = model(counter).createStore(1);
+    const { increase, sum } = store.getInstance();
+    increase();
+    const result = sum(1, 2);
+    expect(store.getInstance().count).not.toBe(result);
   });
 });

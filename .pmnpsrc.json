@@ -1,0 +1,11 @@
+{
+  "name": "as-model",
+  "private": false,
+  "projectType": "classify",
+  "useGit": false,
+  "useCommandHelp": false,
+  "usePerformanceFirst": false,
+  "registry": "https://registry.npmjs.org/",
+  "core": "npm",
+  "plugins": ["@pmnps/plugin-publish"]
+}

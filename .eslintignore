@@ -8,4 +8,3 @@ babel.config.js
 babel.es.config.js
 babel.esm.config.js
 index.js
-webpack.*.js

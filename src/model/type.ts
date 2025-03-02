@@ -1,8 +1,9 @@
-import type { ConnectionKey, Connection } from '../connection/type';
-import type { Config, ModelInstance, ValidInstance } from '../updater/type';
+import type { ModelKey } from '../key/type';
+import type { Store } from '../store/type';
+import type { ModelInstance, ValidInstance } from '../updater/type';
 
 export interface ModelUsage<S, T extends ModelInstance> {
   (s: S): ValidInstance<S, T>;
-  createKey: (state?: S) => ConnectionKey<S, T>;
-  createConnection: (config?: Config<S>) => Connection<S, T>;
+  createKey: (state?: S) => ModelKey<S, T>;
+  createStore: (state?: S) => Store<S, T>;
 }
