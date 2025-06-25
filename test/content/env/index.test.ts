@@ -15,15 +15,29 @@ const counter = function counter(state: number) {
   };
 };
 
-describe('极端环境测试', () => {
-  test('当环境中没有Proxy构造函数时，系统应该正常运行', () => {
-    const P = global.Proxy;
+describe('当环境中没有Proxy构造函数时', () => {
+  const P = global.Proxy;
+
+  beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     global.Proxy = undefined;
+  });
+
+  afterEach(() => {
+    global.Proxy = P;
+  });
+
+  test('系统应该正常运行', () => {
     const { getInstance } = model(counter).createStore(0);
     getInstance().decrease();
     expect(getInstance().count).toBe(-1);
-    global.Proxy = P;
+  });
+
+  test('直接给实例对象属性赋值将抛异常', () => {
+    const { getInstance } = model(counter).createStore(0);
+    expect(() => {
+      getInstance().count = 1;
+    }).toThrow();
   });
 });

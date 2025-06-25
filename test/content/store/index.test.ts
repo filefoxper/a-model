@@ -16,41 +16,14 @@ const counter = function counter(state: number) {
   };
 };
 
-describe('createStore', () => {
-  test('createStore可以为模型创建一个库', () => {
+describe('使用 createStore 创建状态库', () => {
+  test('使用 createStore 可以为模型创建一个库', () => {
     const store = createStore(counter, 0);
     const instance = store.getInstance();
     expect(instance.symbol).toEqual('');
   });
 
-  test('如果不给createStore提供初始状态，则创建一个待初始化库', () => {
-    const store = createStore(counter);
-    const instance = store.getInstance();
-    expect(validations.isInstanceFromNoStateModel(instance)).toEqual(true);
-  });
-
-  test('直接使用待初始化库中的实例所提供的行为方法，会导致异常', () => {
-    const store = createStore(counter);
-    const instance = store.getInstance();
-    expect(() => instance.increase()).toThrow();
-  });
-
-  test('通过使用库的 update 方法代入初始化状态，可以分离库的创建与初始化步骤', () => {
-    const store = createStore(counter);
-    store.update({ initialState: 0 });
-    expect(validations.isInstanceFromNoStateModel(store.getInstance())).toEqual(
-      false
-    );
-  });
-
-  test('调用已初始化库所提供的实例方法，可更新状态刷新实例', () => {
-    const store = createStore(counter, 0);
-    const initializedInstance = store.getInstance();
-    initializedInstance.increase();
-    expect(store.getInstance().symbol).not.toEqual(initializedInstance.symbol);
-  });
-
-  test('可以通过模型键建立库', () => {
+  test('使用 createStore 可以为模型键创建一个库', () => {
     const key = createKey(counter);
     const store = createStore(key, 0);
     const initializedInstance = store.getInstance();
@@ -75,11 +48,48 @@ describe('createStore', () => {
       }
       records.push(a.type);
     });
-    const { increase } = store.getInstance();
-    store.payload(d => records);
-    increase();
+    store.payload(() => records);
     expect(store.payload() as string[]).toBe(records);
     unsubscribe();
+  });
+
+  describe('通过库的 getInstance 方法获取实例对象', () => {
+    test('如果不给createStore提供初始状态，则可以获取一个未初始化实例', () => {
+      const store = createStore(counter);
+      const instance = store.getInstance();
+      expect(validations.isInstanceFromNoStateModel(instance)).toEqual(true);
+    });
+
+    test('直接使用未初始化实例所提供的行为方法，会导致异常', () => {
+      const store = createStore(counter);
+      const instance = store.getInstance();
+      expect(() => instance.increase()).toThrow();
+    });
+
+    test('通过使用库的 update 方法可对未初始化的库进行初始化处理，并得到一个已初始化的实例', () => {
+      const store = createStore(counter);
+      store.update({ initialState: 0 });
+      expect(
+        validations.isInstanceFromNoStateModel(store.getInstance())
+      ).toEqual(false);
+    });
+
+    test('调用已初始化实例的方法，可更新状态刷新实例', () => {
+      const store = createStore(counter, 0);
+      const initializedInstance = store.getInstance();
+      initializedInstance.increase();
+      expect(store.getInstance().symbol).not.toEqual(
+        initializedInstance.symbol
+      );
+    });
+
+    test('库实例不允许人工修改，给实例对象的属性赋值，会引起报错', () => {
+      const store = createStore(counter, 0);
+      const initializedInstance = store.getInstance();
+      expect(() => {
+        initializedInstance.count = 1;
+      }).toThrow();
+    });
   });
 
   describe('使用库的createTunnel方法可创建通道，用于监听库状态的更新情况', () => {
