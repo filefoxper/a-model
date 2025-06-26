@@ -188,7 +188,7 @@ export function extractInstance<S, T extends ModelInstance>(
     onGet(key, value);
   };
   return createProxy(instance, {
-    get(target: T, p: string, receiver: any): any {
+    get(target: T, p: string): any {
       const value = target[p];
       // 行为方法只代理非继承的自身方法
       if (typeof value === 'function' && properties.indexOf(p) >= 0) {
@@ -198,6 +198,9 @@ export function extractInstance<S, T extends ModelInstance>(
         return actionMethod;
       }
       return wrapToField(updater, p, value, handleGetter);
+    },
+    set(): boolean {
+      return false;
     }
   });
 }
