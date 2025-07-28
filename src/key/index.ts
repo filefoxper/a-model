@@ -1,5 +1,6 @@
-import { createStore, createPrimaryKey, isModelKey } from '../store';
-import type { Store, Key, StoreIndex } from '../store/type';
+import { createStore, createPrimaryKey } from '../store';
+import { isModelKey } from '../validation';
+import type { Store, Key, StoreIndex, ModelUsage } from '../store/type';
 import type { ModelKey, StoreCollection } from './type';
 import type {
   Config,
@@ -8,20 +9,21 @@ import type {
   StateConfig
 } from '../updater/type';
 
-export function createKey<S, T extends ModelInstance>(
-  model: Model<S, T> | Key<S, T>,
-  config: StateConfig<S> = {}
-): ModelKey<S, T> {
-  const hasDefaultState = 'state' in config;
-  const wrapModel = hasDefaultState
-    ? createPrimaryKey(model, config.state)
-    : createPrimaryKey(model);
+export function createKey<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(
+  model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
+  config: StateConfig<S, R> = {}
+): ModelKey<S, T, R> {
+  const wrapModel = createPrimaryKey(model, config);
   wrapModel.createStore = function createKeyStore(
     storeConfig: StateConfig<S> = {}
   ) {
     return createStore(wrapModel, { ...config, ...storeConfig });
   };
-  return wrapModel as ModelKey<S, T>;
+  return wrapModel as ModelKey<S, T, R>;
 }
 
 createKey.isModelKey = isModelKey;
@@ -42,9 +44,11 @@ export function createStores(
     );
   });
   return {
-    find<S, T extends ModelInstance>(
-      key: Key<S, T> | StoreIndex<S, T>
-    ): Store<S, T> | null {
+    find<
+      S,
+      T extends ModelInstance,
+      R extends (ins: () => T) => any = (ins: () => T) => T
+    >(key: Key<S, T, R> | StoreIndex<S, T, R>): Store<S, T, R> | null {
       const found = storeUnits.find(c => {
         if (typeof key === 'function') {
           return c.key === key;
@@ -54,7 +58,7 @@ export function createStores(
       if (!found) {
         return null;
       }
-      return found as unknown as Store<S, T>;
+      return found as unknown as Store<S, T, R>;
     },
     update(...keys: (ModelKey | StoreIndex)[]) {
       if (state.destroyed) {

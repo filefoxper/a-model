@@ -45,8 +45,10 @@ export interface Config {
   ) => void;
 }
 
-export interface StateConfig<S> extends Config {
+export interface StateConfig<S, R extends (ins: any) => any = (ins: any) => any>
+  extends Config {
   state?: S;
+  selector?: R;
 }
 
 export type Updater<S, T extends ModelInstance> = {
@@ -69,9 +71,9 @@ export type Updater<S, T extends ModelInstance> = {
   initialized: boolean;
   state: S;
   config: Config;
-  payload: <R>(
-    callback?: (payload: R | undefined) => R | undefined
-  ) => R | undefined;
+  payload: <P>(
+    callback?: (payload: P | undefined) => P | undefined
+  ) => P | undefined;
   update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
   notify: (action: Action | null) => void;
   mutate: (

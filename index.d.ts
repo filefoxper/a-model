@@ -27,12 +27,17 @@ export type Action<S = any, T extends ModelInstance = ModelInstance> = {
 
 declare type Dispatch = (action: Action) => unknown;
 
-export interface Key<S = any, T extends ModelInstance = any>
-  extends Model<S, T> {
+export interface Key<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> extends Model<S, T> {
   (s: S): T;
   source: Model<S, T>;
+  selector: R;
   modelKeyIdentifier: () => boolean;
   [k: string]: any;
+  defaultState?: S;
 }
 
 export interface Config {
@@ -45,66 +50,103 @@ export interface Config {
 
 /** createStore * */
 
-export interface KeyWrapper<S = any, T extends ModelInstance = any> {
-  key: Key<S, T>;
+export interface StoreIndex<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> {
+  key: Key<S, T, R>;
 }
 
-export interface Store<S = any, T extends ModelInstance = any>
-  extends KeyWrapper<S, T> {
+export interface Store<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getInstance: () => T;
   update: (args?: { model?: Model<S, T>; state?: S }) => void;
   destroy: () => void;
-  payload: <R>(
-    callback?: (payload: R | undefined) => R | undefined
-  ) => R | undefined;
+  payload: <P>(
+    callback?: (payload: P | undefined) => P | undefined
+  ) => P | undefined;
+  select: () => ReturnType<R>;
   isDestroyed: () => boolean;
 }
 
-export function createStore<S, T extends ModelInstance, D extends S>(
-  model: Model<S, T> | Key<S, T>,
+export function createStore<
+  S,
+  T extends ModelInstance,
+  D extends S,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+>(
+  model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
   state?: D
-): Store<S, T>;
+): Store<S, T, R>;
 
 /** createKey * */
 
-export interface ModelKey<S = any, T extends ModelInstance = any>
-  extends Key<S, T> {
+export interface ModelKey<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> extends Key<S, T, R> {
   (s: S): T;
-  createStore: <D extends S>(state?: D) => Store<S, T>;
+  createStore: <D extends S>(state?: D) => Store<S, T, R>;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export interface createKey {
-  <S, T extends ModelInstance, D extends S>(
-    model: Model<S, T>,
+  <
+    S,
+    T extends ModelInstance,
+    D extends S,
+    R extends (instance: () => T) => any = (instance: () => T) => T
+  >(
+    model: Model<S, T> | ModelUsage<S, T, R>,
     state?: D
-  ): ModelKey<S, T>;
-  isModelKey: <S, T extends ModelInstance>(
+  ): ModelKey<S, T, R>;
+  isModelKey: <
+    ST,
+    INS extends ModelInstance,
+    SE extends (instance: () => INS) => any = (instance: () => INS) => INS
+  >(
     data: unknown
-  ) => data is ModelKey<S, T>;
+  ) => data is ModelKey<ST, INS, SE>;
 }
 
 /** createStores * */
 
 export interface StoreCollection {
-  find: <S, T extends ModelInstance>(
-    key: Key<S, T> | KeyWrapper<S, T>
-  ) => Store<S, T> | null;
-  update: (...keys: (ModelKey | KeyWrapper)[]) => void;
+  find: <
+    S,
+    T extends ModelInstance,
+    R extends (instance: () => T) => any = (instance: () => T) => T
+  >(
+    key: Key<S, T, R> | StoreIndex<S, T, R>
+  ) => Store<S, T, R> | null;
+  update: (...keys: (ModelKey | StoreIndex)[]) => void;
   destroy: () => void;
 }
 
 export function createStores(
-  ...modelKeys: (ModelKey | KeyWrapper)[]
+  ...modelKeys: (ModelKey | StoreIndex)[]
 ): StoreCollection;
 
 /** model API * */
 
-export interface ModelUsage<S, T extends ModelInstance> {
+export interface ModelUsage<
+  S,
+  T extends ModelInstance,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> {
   (s: S): ValidInstance<S, T>;
-  createKey: (state?: S) => ModelKey<S, T>;
-  createStore: (state?: S) => Store<S, T>;
+  createKey: <D extends S>(state?: D) => ModelKey<S, T, R>;
+  createStore: <D extends S>(state?: D) => Store<S, T, R>;
+  select: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+    s: C
+  ) => ModelUsage<S, T, C>;
+  selector: R;
 }
 
 declare type FieldStructure<R = any> = {
@@ -123,36 +165,49 @@ declare type MethodStructure<
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export interface model {
-  <S, T extends ModelInstance>(modelFn: Model<S, T>): ModelUsage<S, T>;
-  createField: <R extends () => any>(
-    callback: R,
+  <
+    S,
+    T extends ModelInstance,
+    R extends (instance: () => T) => any = (instance: () => T) => T
+  >(
+    modelFn: Model<S, T>,
+    s?: R
+  ): ModelUsage<S, T, R>;
+  createField: <P extends () => any>(
+    callback: P,
     deps?: unknown[]
-  ) => FieldStructure<ReturnType<R>>;
-  createMethod: <R extends (...args: any[]) => any = (...args: any[]) => any>(
-    method: R
-  ) => MethodStructure<R>;
+  ) => FieldStructure<ReturnType<P>>;
+  createMethod: <P extends (...args: any[]) => any = (...args: any[]) => any>(
+    method: P
+  ) => MethodStructure<P>;
 }
 
 /** createSignal * */
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-declare interface SignalStore<S = any, T extends ModelInstance = any>
-  extends KeyWrapper<S, T> {
+declare interface SignalStore<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+> extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
     (): T;
+    select: () => ReturnType<R>;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
-    payload: <R>(
-      callback?: (payload: R | undefined) => R | undefined
-    ) => R | undefined;
+    payload: <P>(
+      callback?: (payload: P | undefined) => P | undefined
+    ) => P | undefined;
   };
 }
 
-export declare function createSignal<S, T extends ModelInstance>(
-  store: Store<S, T>
-): SignalStore<S, T>;
+export declare function createSignal<
+  S,
+  T extends ModelInstance,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+>(store: Store<S, T, R>): SignalStore<S, T, R>;
 
 /** config * */
 export declare function config(configuration: Config): {
