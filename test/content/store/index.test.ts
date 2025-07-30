@@ -1,4 +1,10 @@
-import { validations, config, createSignal } from '../../../src';
+import {
+  validations,
+  config,
+  createSignal,
+  model,
+  createSelector
+} from '../../../src';
 import { noop } from '../../../src/tools';
 
 const { createKey, createStore } = config();
@@ -194,8 +200,8 @@ describe('使用 createStore 创建状态库', () => {
     });
   });
 
-  describe('使用通道的getSignal方法可创建信号点', () => {
-    test('当信号点所产生的实例字段在行为发生前后均被访问，且值发生了变更，信号点会将行为通知到监听函数', () => {
+  describe('使用 createSignal 方法可创建信号同步点', () => {
+    test('当信号同步点所产生的实例字段在行为发生前后均被访问，且值发生了变更，信号点会将行为通知到监听函数', () => {
       const actions: string[] = [];
       const store = createStore(counter, 0);
       const { subscribe, getSignal } = createSignal(store);
@@ -216,7 +222,7 @@ describe('使用 createStore 创建状态库', () => {
       unsubscribe();
     });
 
-    test('当使用信号点的stopStatistics方法时，信号点停止对比实例字段，并随行为的产生通知到监听函数，可通过再次使用startStatistics方法进行恢复', () => {
+    test('当使用信号同步点的stopStatistics方法时，信号点停止对比实例字段，并随行为的产生通知到监听函数，可通过再次使用startStatistics方法进行恢复', () => {
       const actions: string[] = [];
       const store = createStore(counter, 0);
       const { subscribe, getSignal } = createSignal(store);
@@ -239,6 +245,95 @@ describe('使用 createStore 创建状态库', () => {
       const { count: c1 } = signal();
       increase();
       expect(actions.length).toBe(1);
+      unsubscribe();
+    });
+  });
+
+  describe('使用 createSelector 方法可创建一个实例重选同步点', () => {
+    test('当实例重选同步点的 select 方法没有使用自定义 selector 函数作参数时，默认使用通过 model API 设置的 selector 函数', async () => {
+      const store = model(counter)
+        .select(getInstance => {
+          const instance = getInstance();
+          return {
+            ...instance,
+            async increase() {
+              await Promise.resolve();
+              getInstance().increase();
+            },
+            async decrease() {
+              await Promise.resolve();
+              getInstance().decrease();
+            }
+          };
+        })
+        .createStore(0);
+      const actions: string[] = [];
+      const { subscribe, select } = createSelector(store);
+      const unsubscribe = subscribe(action => {
+        if (!action.type) {
+          return;
+        }
+        actions.push(action.type);
+      });
+      const { increase } = select();
+      const promise = increase();
+      const { count: increaseBeforeCount } = select();
+      await promise;
+      const { count: increaseAfterCount } = select();
+      expect([increaseBeforeCount, increaseAfterCount]).toEqual([0, 1]);
+      unsubscribe();
+    });
+
+    test('当实例重选同步点的 select 方法使用了自定义 selector 函数，则应该返回该函数的重选结果', () => {
+      const store = model(counter).createStore(0);
+      const actions: string[] = [];
+      const { subscribe, select } = createSelector(store);
+      const unsubscribe = subscribe(action => {
+        if (!action.type) {
+          return;
+        }
+        actions.push(action.type);
+      });
+      const increase = select(getInstance => {
+        return getInstance().increase;
+      });
+      increase();
+      const count = select(getInstance => getInstance().count);
+      expect(count).toEqual(1);
+      unsubscribe();
+    });
+
+    test('当实例重选同步点的 select 方法使用了自定义的 equality 函数时，返回结果是否更新由 equality 对比值是否相等决定', async () => {
+      const store = model(counter)
+        .select(getInstance => {
+          const instance = getInstance();
+          return {
+            ...instance,
+            async increase() {
+              await Promise.resolve();
+              getInstance().increase();
+            },
+            async decrease() {
+              await Promise.resolve();
+              getInstance().decrease();
+            }
+          };
+        })
+        .createStore(0);
+      const actions: string[] = [];
+      const { subscribe, select } = createSelector(store, {
+        equality: () => true
+      });
+      const unsubscribe = subscribe(action => {
+        if (!action.type) {
+          return;
+        }
+        actions.push(action.type);
+      });
+      const { increase } = select();
+      const promise = increase();
+      await promise;
+      expect(actions.length).toBe(0);
       unsubscribe();
     });
   });

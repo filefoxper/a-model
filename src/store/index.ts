@@ -1,20 +1,18 @@
 import { createUpdater } from '../updater';
-import { shallowEqual } from '../tools';
 import { isModelKey, isModelUsage } from '../validation';
 import { modelKeyIdentifier } from '../identifiers';
 import {
-  cacheIdentify,
   extractInstance,
   createField as createInstanceField,
   createMethod as createInstanceMethod
 } from './instance';
-import type { Key, ModelUsage, SignalStore, Store } from './type';
+import type { Key, ModelUsage, Store } from './type';
 import type {
-  Action,
   Dispatch,
   Model,
   ModelInstance,
-  StateConfig
+  StateConfig,
+  UpdaterStore
 } from '../updater/type';
 
 export function createPrimaryKey<
@@ -72,7 +70,21 @@ export function createStore<
     }
     return config;
   })();
-  const updater = createUpdater(model, conf);
+  const combinedMiddleWare = function combinedMiddleWare(s: UpdaterStore) {
+    return function updaterMiddleWare(next: Dispatch) {
+      const { middleWares } = conf;
+      if (middleWares == null) {
+        return next;
+      }
+      const updateMiddleWares = [...middleWares].reverse().map(middleWare => {
+        return middleWare(s);
+      });
+      return updateMiddleWares.reduce((finalDispatcher, um) => {
+        return um(finalDispatcher);
+      }, next);
+    };
+  };
+  const updater = createUpdater(model, combinedMiddleWare, conf);
   const key = modelKey ?? createPrimaryKey<S, T, S, R>(model, config);
   const getInstance = function getInstance(): T {
     return extractInstance(updater);
@@ -96,14 +108,6 @@ export function createStore<
     ): P | undefined {
       return updater.payload<P>(callback);
     },
-    select(): ReturnType<R> {
-      if (typeof key.selector !== 'function') {
-        throw new Error(
-          'Can not find selector from model. Usage model(fn).select(fn) to set it before use.'
-        );
-      }
-      return key.selector(getInstance);
-    },
     isDestroyed() {
       return updater.isDestroyed;
     },
@@ -112,98 +116,8 @@ export function createStore<
   return store;
 }
 
-export function createSignal<
-  S,
-  T extends ModelInstance,
-  R extends (instance: () => T) => any = (instance: () => T) => any
->(store: Store<S, T, R>): SignalStore<S, T, R> {
-  const signalStore: {
-    collection: null | Record<string, any>;
-    started: boolean;
-    enabled: boolean;
-  } = {
-    collection: null,
-    started: false,
-    enabled: false
-  };
-  const middleWare = (dispatcher: Dispatch) => {
-    return (action: Action) => {
-      if (!signalStore.enabled) {
-        dispatcher(action);
-        return;
-      }
-      const { collection } = signalStore;
-      if (collection == null) {
-        dispatcher(action);
-        return;
-      }
-      const current = extractInstance(store.updater);
-      const keys = Object.keys(collection);
-      const currentCollectionEntries = keys.map((key): [string, any] => {
-        const field = current[key];
-        if (cacheIdentify.field(field)) {
-          return [key, field.get()];
-        }
-        return [key, field];
-      });
-      const currentCollection = Object.fromEntries(currentCollectionEntries);
-      if (!shallowEqual(collection, currentCollection)) {
-        dispatcher(action);
-      }
-    };
-  };
-  const { key: storeKey } = store;
-  return {
-    key: storeKey,
-    subscribe(dispatcher: Dispatch): () => void {
-      return store.subscribe(middleWare(dispatcher));
-    },
-    getSignal() {
-      const collectUsedFields = function collectUsedFields(
-        key: string,
-        val: any
-      ) {
-        if (!signalStore.started) {
-          return;
-        }
-        signalStore.collection = signalStore.collection || {};
-        signalStore.collection[key] = val;
-      };
-      const getInstance = function getInstance() {
-        return extractInstance(store.updater, collectUsedFields);
-      };
-      const signal = function signal() {
-        return getInstance();
-      };
-      signal.select = function select() {
-        if (typeof storeKey.selector !== 'function') {
-          throw new Error(
-            'Can not find selector from model. Usage model(fn).select(fn) to set it before use.'
-          );
-        }
-        return storeKey.selector(getInstance);
-      };
-      signal.startStatistics = function startStatistics() {
-        signalStore.started = true;
-      };
-      signal.stopStatistics = function stopStatistics() {
-        signalStore.started = false;
-      };
-      signal.subscribe = function subscribe(dispatchCallback: Dispatch) {
-        return store.subscribe(dispatchCallback);
-      };
-      signal.payload = function payload<P>(
-        callback?: (payload: P | undefined) => P | undefined
-      ): P | undefined {
-        return store.payload<P>(callback);
-      };
-      signalStore.enabled = true;
-      signalStore.started = true;
-      return signal;
-    }
-  };
-}
-
 export const createField = createInstanceField;
 
 export const createMethod = createInstanceMethod;
+
+export { createSignal, createSelector } from './enhance';

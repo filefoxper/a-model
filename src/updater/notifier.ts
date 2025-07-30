@@ -4,7 +4,8 @@ import type {
   Dispatch,
   FirstActionWrap,
   Updater,
-  ModelInstance
+  ModelInstance,
+  MiddleWare
 } from './type';
 
 function defaultNotifyImplement(dispatches: Dispatch[], action: Action) {
@@ -14,7 +15,8 @@ function defaultNotifyImplement(dispatches: Dispatch[], action: Action) {
 }
 
 export function generateNotifier<S, T extends ModelInstance>(
-  updater: Updater<S, T>
+  updater: Updater<S, T>,
+  middleWare: MiddleWare
 ) {
   function pendAction(value: Action) {
     updater.mutate(u => {
@@ -79,8 +81,32 @@ export function generateNotifier<S, T extends ModelInstance>(
 
   const { config } = updater;
 
+  const dispatch = function dispatch(action: Action) {
+    const { dispatches, controlled } = updater;
+    const dispatchCallbacks = [...dispatches];
+    const { instance, state } = action;
+    if (!controlled) {
+      updater.mutate(u => ({
+        ...u,
+        state,
+        instance: instance as T,
+        version: u.version + 1
+      }));
+    }
+    try {
+      if (typeof config.batchNotify === 'function') {
+        config.batchNotify(dispatchCallbacks, action);
+      } else {
+        defaultNotifyImplement(dispatchCallbacks, action);
+      }
+    } catch (e) {
+      updater.mutate(u => ({ ...u, dispatching: undefined }));
+      throw e;
+    }
+  };
+
   return function notify(action: Action | null) {
-    if (action == null) {
+    if (action == null || updater.isDestroyed) {
       return;
     }
     const { dispatching } = updater;
@@ -91,21 +117,12 @@ export function generateNotifier<S, T extends ModelInstance>(
     while (updater.dispatching) {
       const wrap = updater.dispatching;
       if (wrap) {
-        const { dispatches } = updater;
-        const dispatchCallbacks = [...dispatches];
-        try {
-          if (
-            typeof config.batchNotify === 'function' &&
-            dispatchCallbacks.length
-          ) {
-            config.batchNotify(dispatchCallbacks, wrap.value);
-          } else {
-            defaultNotifyImplement(dispatchCallbacks, wrap.value);
-          }
-        } catch (e) {
-          updater.mutate(u => ({ ...u, dispatching: undefined }));
-          throw e;
-        }
+        middleWare({
+          getState() {
+            return { state: updater.state, instance: updater.instance };
+          },
+          dispatch: notify
+        })(dispatch)(wrap.value);
         unshiftAction();
       } else {
         updater.mutate(u => ({ ...u, dispatching: undefined }));

@@ -1,5 +1,4 @@
 import type {
-  Action,
   Dispatch,
   Model,
   ModelInstance,
@@ -21,6 +20,17 @@ export type MethodStructure<
 > = R & {
   identifier: (d: unknown) => d is MethodStructure;
 };
+
+export interface InstanceCache<
+  T extends Record<string, any> = Record<string, any>
+> {
+  target: T;
+  cacheFields: Record<
+    string,
+    { value: any; getter: { get: () => any }; deps?: unknown[] } | null
+  >;
+  cacheMethods: Record<string, (...args: unknown[]) => unknown>;
+}
 
 export interface Key<
   S = any,
@@ -61,7 +71,7 @@ export interface ModelUsage<
 export interface Store<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => any
+  R extends (instance: () => T) => any = (instance: () => T) => T
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   updater: Updater<S, T>;
@@ -71,14 +81,13 @@ export interface Store<
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined
   ) => P | undefined;
-  select: () => ReturnType<R>;
   isDestroyed: () => boolean;
 }
 
 export interface SignalStore<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => any
+  R extends (instance: () => T) => any = (instance: () => T) => T
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
@@ -93,6 +102,6 @@ export interface SignalStore<
   };
 }
 
-export type MiddleWare = (
-  store: Store
-) => (next: Dispatch) => (action: Action) => void;
+export interface SelectorOption<T = any> {
+  equality?: (current: T, next: T) => boolean;
+}

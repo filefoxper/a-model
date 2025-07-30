@@ -72,7 +72,7 @@ function wrapToActionMethod<S, T extends ModelInstance>(
     return cachedMethod;
   }
   const actionMethod = function actionMethod(...args: any[]) {
-    const { instance, isDestroyed, controlled, model } = updater;
+    const { instance, model } = updater;
     const method = instance[methodName];
     if (typeof method !== 'function') {
       throw new Error('Can not change methods in runtime.');
@@ -81,42 +81,15 @@ function wrapToActionMethod<S, T extends ModelInstance>(
       return method(...args);
     }
     const state = method(...args);
-    if (isDestroyed) {
-      return state;
-    }
     const action: Action = {
       type: methodName,
       state,
       prevState: updater.state,
-      instance: updater.instance,
+      instance: model(state),
       prevInstance: updater.instance,
       method: actionMethod
     };
-    if (controlled) {
-      updater.notify(action);
-      return state;
-    }
-    const prevState = updater.state;
-    const prevInstance = updater.instance;
-    const newestInstance = model(state);
-    updater.mutate((up, effect) => {
-      effect(u => {
-        u.notify({
-          type: methodName,
-          state,
-          prevState,
-          instance: newestInstance,
-          prevInstance,
-          method: actionMethod
-        });
-      });
-      return {
-        ...up,
-        instance: newestInstance,
-        state,
-        version: up.version + 1
-      };
-    });
+    updater.notify(action);
     return state;
   };
   cacheMethods[methodName] = actionMethod;
