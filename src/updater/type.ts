@@ -38,6 +38,7 @@ export interface FirstActionWrap extends ActionWrap {
 }
 
 export interface Config {
+  middleWares?: MiddleWare[];
   controlled?: boolean;
   batchNotify?: (
     listeners: ((action: Action) => void)[],
@@ -52,8 +53,6 @@ export interface UpdaterStore<
   getState: () => { state: S; instance: T };
   dispatch: (action: Action) => void;
 }
-
-export type UpdaterMiddleWare = (next: Dispatch) => (action: Action) => void;
 
 export type MiddleWare = (
   store: UpdaterStore

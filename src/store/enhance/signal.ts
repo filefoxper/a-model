@@ -66,14 +66,6 @@ export function createSignal<
       const signal = function signal() {
         return getInstance();
       };
-      signal.select = function select() {
-        if (typeof storeKey.selector !== 'function') {
-          throw new Error(
-            'Can not find selector from model. Usage model(fn).select(fn) to set it before use.'
-          );
-        }
-        return storeKey.selector(getInstance);
-      };
       signal.startStatistics = function startStatistics() {
         signalStore.started = true;
       };

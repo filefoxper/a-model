@@ -6,6 +6,7 @@ import {
   createSelector
 } from '../../../src';
 import { noop } from '../../../src/tools';
+import type { Action, Dispatch, MiddleWare } from '../../../index';
 
 const { createKey, createStore } = config();
 
@@ -356,6 +357,63 @@ describe('使用 createStore 创建状态库', () => {
         configState.state
       ]);
       unsubscribe();
+    });
+  });
+
+  describe('通过 middleWare 截取或转发被分发的行为', () => {
+    test('通过 middleWare 可以拦截被分发的行为', () => {
+      const noNegMiddleWare: MiddleWare = function noNegMiddleWare(store) {
+        return function middleWare(next: Dispatch) {
+          return function dispatch(action: Action) {
+            const { state } = action;
+            const value = state as number;
+            if (value < 0) {
+              return;
+            }
+            next(action);
+          };
+        };
+      };
+      const store = config({ middleWares: [noNegMiddleWare] })
+        .model(counter)
+        .createStore(0);
+      store.getInstance().decrease();
+      expect(store.getInstance().count).toBe(0);
+    });
+
+    test('通过 middleWare 可以拦截并延时转发被分发的行为', async () => {
+      const promiseMiddleWare: MiddleWare = function promiseMiddleWare(store) {
+        return function middleWare(next: Dispatch) {
+          return function dispatch(action: Action) {
+            const { state } = action;
+            if (state && typeof state.then === 'function') {
+              state.then((resolvedState: any) => {
+                const newAction = { ...action, state: resolvedState };
+                store.dispatch(newAction);
+              });
+              return;
+            }
+            next(action);
+          };
+        };
+      };
+
+      const store = config({ middleWares: [promiseMiddleWare] })
+        .model((state: number | Promise<number>) => {
+          if (typeof state !== 'number') {
+            throw new Error('It needs promise middleWare');
+          }
+          const instance = counter(state);
+          return {
+            ...instance,
+            delayIncrease() {
+              return Promise.resolve(state + 1);
+            }
+          };
+        })
+        .createStore(0);
+      await store.getInstance().delayIncrease();
+      expect(store.getInstance().count).toBe(1);
     });
   });
 });
