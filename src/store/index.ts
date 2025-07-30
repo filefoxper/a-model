@@ -1,12 +1,14 @@
 import { createUpdater } from '../updater';
 import { shallowEqual } from '../tools';
+import { isModelKey, isModelUsage } from '../validation';
+import { modelKeyIdentifier } from '../identifiers';
 import {
   cacheIdentify,
   extractInstance,
   createField as createInstanceField,
   createMethod as createInstanceMethod
 } from './instance';
-import type { Key, SignalStore, Store } from './type';
+import type { Key, ModelUsage, SignalStore, Store } from './type';
 import type {
   Action,
   Dispatch,
@@ -14,45 +16,51 @@ import type {
   ModelInstance,
   StateConfig
 } from '../updater/type';
-import type { ModelKey } from '../key/type';
 
-export function modelKeyIdentifier() {
-  return true;
-}
-
-export function isModelKey<S, T extends ModelInstance>(
-  data: unknown
-): data is ModelKey<S, T> {
-  if (!data) {
-    return false;
-  }
-  return (data as any).modelKeyIdentifier === modelKeyIdentifier;
-}
-
-export function createPrimaryKey<S, T extends ModelInstance, D extends S>(
-  modelFn: Model<S, T> | Key<S, T>,
-  defaultState?: D
-): Key<S, T> {
-  const model = isModelKey<S, T>(modelFn) ? modelFn.source : modelFn;
+export function createPrimaryKey<
+  S,
+  T extends ModelInstance,
+  D extends S,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(
+  modelFn: Model<S, T> | Key<S, T> | ModelUsage<S, T, R>,
+  config: StateConfig<D, R> = {}
+): Key<S, T, R> {
+  const ifModelKey = isModelKey<S, T, R>(modelFn);
+  const ifModelUsage = isModelUsage<S, T, R>(modelFn);
+  const model = ifModelKey ? modelFn.source : modelFn;
+  const selector =
+    config.selector ??
+    (ifModelKey || ifModelUsage
+      ? modelFn.selector
+      : function defaultSelector(i: () => T) {
+          return i();
+        });
   const wrapModel = function wrapModel(state: S) {
     return model(state);
   };
   wrapModel.source = model;
+  wrapModel.selector = selector;
   wrapModel.modelKeyIdentifier = modelKeyIdentifier;
-  if (arguments.length > 1) {
-    wrapModel.defaultState = defaultState;
+  if ('state' in config) {
+    wrapModel.defaultState = config.state;
   }
-  return wrapModel;
+  return wrapModel as Key<S, T, R>;
 }
 
-export function createStore<S, T extends ModelInstance>(
-  modelLike: Model<S, T> | Key<S, T>,
-  config: StateConfig<S> = {}
-): Store<S, T> {
-  const model: Model<S, T> = isModelKey<S, T>(modelLike)
+export function createStore<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(
+  modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
+  config: StateConfig<S, R> = {}
+): Store<S, T, R> {
+  const ifModelKey = isModelKey<S, T, R>(modelLike);
+  const model: Model<S, T> | ModelUsage<S, T, R> = ifModelKey
     ? modelLike.source
     : modelLike;
-  const modelKey = isModelKey<S, T>(modelLike) ? modelLike : undefined;
+  const modelKey = ifModelKey ? modelLike : undefined;
   const conf = (function computeConfig() {
     const hasConfigState = 'state' in config;
     const hasKeyState = !!modelKey && 'defaultState' in modelKey;
@@ -65,30 +73,36 @@ export function createStore<S, T extends ModelInstance>(
     return config;
   })();
   const updater = createUpdater(model, conf);
-  const store: Store<S, T> = {
-    key:
-      modelKey ??
-      ('state' in config
-        ? createPrimaryKey(model, config.state)
-        : createPrimaryKey(model)),
+  const key = modelKey ?? createPrimaryKey<S, T, S, R>(model, config);
+  const getInstance = function getInstance(): T {
+    return extractInstance(updater);
+  };
+  const store: Store<S, T, R> = {
+    key,
     subscribe(dispatcher: Dispatch) {
       const { connect, disconnect } = updater.createTunnel(dispatcher);
       connect();
       return disconnect;
     },
-    getInstance(): T {
-      return extractInstance(updater);
-    },
+    getInstance,
     update(args?: { model?: Model<S, T>; state?: S }) {
       updater.update(args);
     },
     destroy() {
       updater.destroy();
     },
-    payload<R>(
-      callback?: (payload: R | undefined) => R | undefined
-    ): R | undefined {
-      return updater.payload<R>(callback);
+    payload<P>(
+      callback?: (payload: P | undefined) => P | undefined
+    ): P | undefined {
+      return updater.payload<P>(callback);
+    },
+    select(): ReturnType<R> {
+      if (typeof key.selector !== 'function') {
+        throw new Error(
+          'Can not find selector from model. Usage model(fn).select(fn) to set it before use.'
+        );
+      }
+      return key.selector(getInstance);
     },
     isDestroyed() {
       return updater.isDestroyed;
@@ -98,9 +112,11 @@ export function createStore<S, T extends ModelInstance>(
   return store;
 }
 
-export function createSignal<S, T extends ModelInstance>(
-  store: Store<S, T>
-): SignalStore<S, T> {
+export function createSignal<
+  S,
+  T extends ModelInstance,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+>(store: Store<S, T, R>): SignalStore<S, T, R> {
   const signalStore: {
     collection: null | Record<string, any>;
     started: boolean;
@@ -136,8 +152,9 @@ export function createSignal<S, T extends ModelInstance>(
       }
     };
   };
+  const { key: storeKey } = store;
   return {
-    key: store.key,
+    key: storeKey,
     subscribe(dispatcher: Dispatch): () => void {
       return store.subscribe(middleWare(dispatcher));
     },
@@ -152,8 +169,19 @@ export function createSignal<S, T extends ModelInstance>(
         signalStore.collection = signalStore.collection || {};
         signalStore.collection[key] = val;
       };
-      const signal = function signal() {
+      const getInstance = function getInstance() {
         return extractInstance(store.updater, collectUsedFields);
+      };
+      const signal = function signal() {
+        return getInstance();
+      };
+      signal.select = function select() {
+        if (typeof storeKey.selector !== 'function') {
+          throw new Error(
+            'Can not find selector from model. Usage model(fn).select(fn) to set it before use.'
+          );
+        }
+        return storeKey.selector(getInstance);
       };
       signal.startStatistics = function startStatistics() {
         signalStore.started = true;
@@ -164,10 +192,10 @@ export function createSignal<S, T extends ModelInstance>(
       signal.subscribe = function subscribe(dispatchCallback: Dispatch) {
         return store.subscribe(dispatchCallback);
       };
-      signal.payload = function payload<R>(
-        callback?: (payload: R | undefined) => R | undefined
-      ): R | undefined {
-        return store.payload<R>(callback);
+      signal.payload = function payload<P>(
+        callback?: (payload: P | undefined) => P | undefined
+      ): P | undefined {
+        return store.payload<P>(callback);
       };
       signalStore.enabled = true;
       signalStore.started = true;

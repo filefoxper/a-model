@@ -6,6 +6,7 @@ import type {
   Updater,
   ValidInstance
 } from '../updater/type';
+import type { ModelKey } from '../key/type';
 
 export type FieldStructure<R = any> = {
   callback: () => R;
@@ -21,44 +22,77 @@ export type MethodStructure<
   identifier: (d: unknown) => d is MethodStructure;
 };
 
-export interface Key<S = any, T extends ModelInstance = any>
-  extends Model<S, T> {
+export interface Key<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> extends Model<S, T> {
   (s: S): ValidInstance<S, T>;
   source: Model<S, T>;
+  selector: R;
   modelKeyIdentifier: () => boolean;
   defaultState?: S;
   [k: string]: any;
 }
 
-export interface StoreIndex<S = any, T extends ModelInstance = any> {
-  key: Key<S, T>;
+export interface StoreIndex<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> {
+  key: Key<S, T, R>;
 }
 
-export interface Store<S = any, T extends ModelInstance = any>
-  extends StoreIndex<S, T> {
+export interface ModelUsage<
+  S,
+  T extends ModelInstance,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+> {
+  (s: S): ValidInstance<S, T>;
+  createKey: (state?: S) => ModelKey<S, T, R>;
+  createStore: (state?: S) => Store<S, T, R>;
+  select: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+    s: C
+  ) => ModelUsage<S, T, C>;
+  selector: R;
+  modelUsageIdentifier: () => boolean;
+}
+
+export interface Store<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+> extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   updater: Updater<S, T>;
   getInstance: () => T;
   update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
   destroy: () => void;
-  payload: <R>(
-    callback?: (payload: R | undefined) => R | undefined
-  ) => R | undefined;
+  payload: <P>(
+    callback?: (payload: P | undefined) => P | undefined
+  ) => P | undefined;
+  select: () => ReturnType<R>;
   isDestroyed: () => boolean;
 }
 
-export interface SignalStore<S = any, T extends ModelInstance = any>
-  extends StoreIndex<S, T> {
+export interface SignalStore<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+> extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
     (): T;
+    select: () => ReturnType<R>;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
-    payload: <R>(
-      callback?: (payload: R | undefined) => R | undefined
-    ) => R | undefined;
+    payload: <P>(
+      callback?: (payload: P | undefined) => P | undefined
+    ) => P | undefined;
   };
 }
 
-export type MiddleWare = (next: Dispatch) => (action: Action) => void;
+export type MiddleWare = (
+  store: Store
+) => (next: Dispatch) => (action: Action) => void;
