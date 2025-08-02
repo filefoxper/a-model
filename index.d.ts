@@ -70,7 +70,6 @@ export interface Store<
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined
   ) => P | undefined;
-  select: () => ReturnType<R>;
   isDestroyed: () => boolean;
 }
 
@@ -208,6 +207,39 @@ export declare function createSignal<
   T extends ModelInstance,
   R extends (instance: () => T) => any = (instance: () => T) => any
 >(store: Store<S, T, R>): SignalStore<S, T, R>;
+
+/** createSelector * */
+
+declare type SelectMethod<
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+> = {
+  (): ReturnType<R>;
+  <C extends (instance: () => T) => any>(selector: C): ReturnType<C>;
+  <C extends (instance: () => T) => any>(
+    selector?: C
+  ): ReturnType<R> | ReturnType<C>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+declare interface SelectorStore<
+  S = any,
+  T extends ModelInstance = any,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+> extends StoreIndex<S, T, R> {
+  subscribe: (dispatcher: Dispatch) => () => void;
+  select: SelectMethod<T, R>;
+}
+
+declare interface SelectorOption<T = any> {
+  equality?: (current: T, next: T) => boolean;
+}
+
+export declare function createSelector<
+  S,
+  T extends ModelInstance,
+  R extends (instance: () => T) => any = (instance: () => T) => any
+>(store: Store<S, T, R>, opts?: SelectorOption): SelectorStore<S, T, R>;
 
 /** config * */
 export declare function config(configuration: Config): {

@@ -1,4 +1,4 @@
-import { config } from '../../../src';
+import { config, createSelector } from '../../../src';
 
 const { model } = config();
 
@@ -30,6 +30,51 @@ describe('model', () => {
     increase();
     expect(getInstance().count).toBe(1);
     destroy();
+  });
+
+  test('使用model API，可为创建的库添加默认实例重选组合方案', async () => {
+    const store = model(counter)
+      .select(getInstance => {
+        return {
+          ...getInstance(),
+          async delayIncrease() {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                resolve(getInstance().increase());
+              }, 200);
+            });
+          }
+        };
+      })
+      .createStore(0);
+    const { subscribe, select } = createSelector(store);
+    const unsubscribe = subscribe();
+    await select().delayIncrease();
+    expect(select().count).toBe(1);
+    unsubscribe();
+  });
+
+  test('使用model API，可为创建的键添加默认实例重选组合方案', async () => {
+    const key = model(counter)
+      .select(getInstance => {
+        return {
+          ...getInstance(),
+          async delayIncrease() {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                resolve(getInstance().increase());
+              }, 200);
+            });
+          }
+        };
+      })
+      .createKey(0);
+    const store = key.createStore();
+    const { subscribe, select } = createSelector(store);
+    const unsubscribe = subscribe();
+    await select().delayIncrease();
+    expect(select().count).toBe(1);
+    unsubscribe();
   });
 });
 
@@ -94,5 +139,31 @@ describe('model.createField', () => {
     increase();
     const result = sum(1, 2);
     expect(store.getInstance().count).not.toBe(result);
+  });
+
+  test('使用 model.createField 创建的字段，可为运用于默认实例重选组合方案', () => {
+    const symbols: any[] = [];
+    const store = model(counter)
+      .select(getInstance => {
+        return {
+          selectedInfo: model.createField(
+            () => ({
+              symbol: getInstance().symbol
+            }),
+            [getInstance().symbol]
+          ),
+          ...getInstance()
+        };
+      })
+      .createStore(0);
+    const { subscribe, select } = createSelector(store);
+    const unsubscribe = subscribe();
+    symbols.push(select().selectedInfo.get());
+    select().decrease();
+    symbols.push(select().selectedInfo.get());
+    select().decrease();
+    symbols.push(select().selectedInfo.get());
+    expect(symbols[1]).toBe(symbols[2]);
+    unsubscribe();
   });
 });

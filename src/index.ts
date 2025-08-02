@@ -61,6 +61,6 @@ const { createStore, createKey, createStores, model } = config();
 
 export { createStore, createKey, createStores, model };
 
-export { createSignal } from './store';
+export { createSignal, createSelector } from './store';
 
 export { validations } from './validation';

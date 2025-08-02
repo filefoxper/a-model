@@ -45,10 +45,25 @@ export interface Config {
   ) => void;
 }
 
+export interface UpdaterStore<
+  S = any,
+  T extends ModelInstance = ModelInstance
+> {
+  getState: () => { state: S; instance: T };
+  dispatch: (action: Action) => void;
+}
+
+export type UpdaterMiddleWare = (next: Dispatch) => (action: Action) => void;
+
+export type MiddleWare = (
+  store: UpdaterStore
+) => (next: Dispatch) => (action: Action) => void;
+
 export interface StateConfig<S, R extends (ins: any) => any = (ins: any) => any>
   extends Config {
   state?: S;
   selector?: R;
+  middleWares?: MiddleWare[];
 }
 
 export type Updater<S, T extends ModelInstance> = {

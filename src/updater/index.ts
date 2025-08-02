@@ -5,19 +5,29 @@ import {
   createUnInitializedUpdater,
   destroy
 } from './tunnel';
-import type { Model, ModelInstance, Updater, StateConfig } from './type';
+import type {
+  Model,
+  ModelInstance,
+  Updater,
+  StateConfig,
+  MiddleWare
+} from './type';
 
 function createInitializedUpdater<S, T extends ModelInstance>(
-  updater: Updater<S, T>
+  updater: Updater<S, T>,
+  middleWare: MiddleWare
 ) {
   const createTunnel = generateTunnelCreator(updater);
   return {
-    notify: generateNotifier(updater),
+    notify: generateNotifier(updater, middleWare),
     createTunnel
   };
 }
 
-function createUpdateFn<S, T extends ModelInstance>(updater: Updater<S, T>) {
+function createUpdateFn<S, T extends ModelInstance>(
+  updater: Updater<S, T>,
+  middleWare: MiddleWare
+) {
   return function update(
     args: { model?: Model<S, T>; initialState?: S; state?: S } = {}
   ) {
@@ -38,7 +48,7 @@ function createUpdateFn<S, T extends ModelInstance>(updater: Updater<S, T>) {
       }
       if (!u.initialized) {
         const instance = model(initialState);
-        const initializedUpdater = createInitializedUpdater(u);
+        const initializedUpdater = createInitializedUpdater(u, middleWare);
         return {
           ...u,
           model,
@@ -77,6 +87,7 @@ const lazyModel = createNoStateModel();
 
 export function createUpdater<S, T extends ModelInstance>(
   model: Model<S, T>,
+  middleWare: MiddleWare,
   config: StateConfig<S> = {}
 ): Updater<S, T> {
   const hasDefaultState = 'state' in config;
@@ -136,9 +147,9 @@ export function createUpdater<S, T extends ModelInstance>(
     },
     ...unInitializedUpdater
   };
-  const initialized = createInitializedUpdater(updater);
+  const initialized = createInitializedUpdater(updater, middleWare);
   Object.assign(updater, initialized, {
-    update: createUpdateFn(updater)
+    update: createUpdateFn(updater, middleWare)
   });
   return updater;
 }
