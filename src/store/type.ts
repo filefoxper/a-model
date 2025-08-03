@@ -92,7 +92,6 @@ export interface SignalStore<
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
     (): T;
-    select: () => ReturnType<R>;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;

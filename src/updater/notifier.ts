@@ -79,17 +79,17 @@ export function generateNotifier<S, T extends ModelInstance>(
     });
   }
 
-  const { config } = updater;
+  const { config, model } = updater;
 
   const dispatch = function dispatch(action: Action) {
     const { dispatches, controlled } = updater;
     const dispatchCallbacks = [...dispatches];
-    const { instance, state } = action;
+    const { state } = action;
     if (!controlled) {
       updater.mutate(u => ({
         ...u,
         state,
-        instance: instance as T,
+        instance: model(state) as T,
         version: u.version + 1
       }));
     }

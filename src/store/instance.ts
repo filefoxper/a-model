@@ -85,7 +85,7 @@ function wrapToActionMethod<S, T extends ModelInstance>(
       type: methodName,
       state,
       prevState: updater.state,
-      instance: model(state),
+      instance: updater.instance,
       prevInstance: updater.instance,
       method: actionMethod
     };

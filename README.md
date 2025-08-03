@@ -128,6 +128,37 @@ getInstance().increase(); // output: {count: 1}
 unsubscribe();
 ```
 
+Want to use async operations?
+
+```js
+import {counting} from './model';
+import {model, createSelector} from 'as-model';
+
+const store = model(counting).select((getInstance)=>{
+    const instance = getInstance();
+    return {
+        ...instance,
+        async delayIncrease(){
+            const ok = await new Promise((resolve)=>{
+                setTimeout(()=>{
+                    resolve(true);
+                },200);
+            });
+            if(ok){
+                getInstance().increase();
+            }
+        }
+    }
+}).createStore(0);
+const {subscribe, select} = createSelector(store);
+const unsubscribe = subscribe();
+// When use select with no parameter,
+// select method finds default selector for reproducing result 
+const {delayIncrease} = select();
+await delayIncrease();
+select().count // 1
+```
+
 Sync store with state in react hooks:
 
 ```js
@@ -332,7 +363,7 @@ Multiple stores created by the model keys.
 ### createSignal
 
 ```js
-function createSignal(store):signalAPI
+function createSignal(store):SignalStore
 ```
 
 #### parameters
@@ -341,7 +372,7 @@ function createSignal(store):signalAPI
 
 #### return
 
-Signal api object with `subscribe` method to subscribe the state changes, and `getSignal` method to get the signal callback function.
+Signal store object with `subscribe` method to subscribe the state changes, and `getSignal` method to get the signal callback function.
 
 **signalAPI** structure:
 
@@ -355,6 +386,40 @@ Signal api object with `subscribe` method to subscribe the state changes, and `g
 
 The signal function returns a real time instance from store. Only when the properties picked from real time instance are changed, the subscribed listener can receive an action notification.
 
+### createSelector
+
+```js
+function createSelector(store, opts?:SelectorOptions):SelectorStore
+```
+
+#### parameters
+
+* store - a store object created by `createStore` method.
+* opts - (Optional) an object config to optimize createSelector.
+  
+ ```js
+  {
+    // When the selector is drived to reproduce a new data,
+    // it compares if the result is different with the previous one,
+    // if the camparing result is true, it represents no differ happens,
+    // the subscribed callback will not be called.  
+    equality?: (current: T, next: T) => boolean;
+  }
+ ```
+
+ #### return
+
+ Selector store object with `subscribe` method to subscribe the state changes, and `select` method for reselecting instance.
+
+ ```js
+ {
+    subscribe: (listener)=>unsubscribe,
+    select: (selector?:(getInstance:()=>Instance)=>)=>any,
+    key: modelKey,
+ }
+ ```
+
+
 ### model
 
 ```js
@@ -367,14 +432,17 @@ function model(modelFn):modelAPI
 
 #### return
 
-Model api object with `createStore`and `createKey` methods to create store and key for the model function.
+Model api object with `createStore`, `createKey` methods to create store, key for the model function, and `select` method to set a default selector function (Use `createSelector(store).select()` to select the default one). 
 
 **modelAPI** structure:
 
 ```js
 {
-    createStore: (initialState?)=>store,
-    createKey: (initialState?)=>key
+    createStore: (initialState?)=> store,
+    createKey: (initialState?)=> key,
+    select: (
+      selector:(getInstance:()=>Instance)=>Record<string, any>|Array<any>
+    )=>modelApI 
 }
 ```
 
@@ -386,12 +454,14 @@ function config(options):configAPI
 
 #### parameters
 
-* options - an object with the following properties:
-  * batchNotify - a callback function to batch notify the listeners, for example: `unstable_batchedUpdates` from react-dom.
+* options - (Optional) an object with the following properties:
+  * batchNotify - (Optional) a callback function to batch notify the listeners, for example: `unstable_batchedUpdates` from react-dom.
+  * controlled - (Optional) a boolean state to tell as-model use controlled mode to output instance changes.
+  * middleWares - (Optional) a middleWare array for reproducing state or ignore actions.
 
 #### return
 
-All apis above except `createSignal` API.
+All apis above except `createSignal` and `createSelector` API.
 
 ```js
 {

@@ -11,11 +11,11 @@ declare type ValidInstance<S, T extends ModelInstance> = {
       : T[K];
 };
 
-export type Model<S, T extends ModelInstance> = (
+export declare type Model<S, T extends ModelInstance> = (
   state: S
 ) => ValidInstance<S, T>;
 
-export type Action<S = any, T extends ModelInstance = ModelInstance> = {
+export declare type Action<S = any, T extends ModelInstance = ModelInstance> = {
   type: null | string;
   method: null | ((...args: any[]) => any);
   params?: any[];
@@ -27,7 +27,7 @@ export type Action<S = any, T extends ModelInstance = ModelInstance> = {
 
 declare type Dispatch = (action: Action) => unknown;
 
-export interface Key<
+export declare interface Key<
   S = any,
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => T
@@ -40,7 +40,20 @@ export interface Key<
   defaultState?: S;
 }
 
-export interface Config {
+declare interface UpdaterStore<
+  S = any,
+  T extends ModelInstance = ModelInstance
+> {
+  getState: () => { state: S; instance: T };
+  dispatch: (action: Action) => void;
+}
+
+export declare type MiddleWare = (
+  store: UpdaterStore
+) => (next: Dispatch) => (action: Action) => void;
+
+export declare interface Config {
+  middleWares?: MiddleWare[];
   controlled?: boolean;
   batchNotify?: (
     listeners: ((action: Action) => void)[],
@@ -50,7 +63,7 @@ export interface Config {
 
 /** createStore * */
 
-export interface StoreIndex<
+export declare interface StoreIndex<
   S = any,
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => T
@@ -58,7 +71,7 @@ export interface StoreIndex<
   key: Key<S, T, R>;
 }
 
-export interface Store<
+export declare interface Store<
   S = any,
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => T
@@ -73,7 +86,7 @@ export interface Store<
   isDestroyed: () => boolean;
 }
 
-export function createStore<
+export declare function createStore<
   S,
   T extends ModelInstance,
   D extends S,
@@ -85,7 +98,7 @@ export function createStore<
 
 /** createKey * */
 
-export interface ModelKey<
+export declare interface ModelKey<
   S = any,
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => T
@@ -95,7 +108,7 @@ export interface ModelKey<
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export interface createKey {
+export declare interface createKey {
   <
     S,
     T extends ModelInstance,
@@ -116,7 +129,7 @@ export interface createKey {
 
 /** createStores * */
 
-export interface StoreCollection {
+export declare interface StoreCollection {
   find: <
     S,
     T extends ModelInstance,
@@ -128,13 +141,13 @@ export interface StoreCollection {
   destroy: () => void;
 }
 
-export function createStores(
+export declare function createStores(
   ...modelKeys: (ModelKey | StoreIndex)[]
 ): StoreCollection;
 
 /** model API * */
 
-export interface ModelUsage<
+export declare interface ModelUsage<
   S,
   T extends ModelInstance,
   R extends (instance: () => T) => any = (instance: () => T) => T
@@ -163,7 +176,7 @@ declare type MethodStructure<
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export interface model {
+export declare interface model {
   <
     S,
     T extends ModelInstance,
@@ -192,7 +205,6 @@ declare interface SignalStore<
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
     (): T;
-    select: () => ReturnType<R>;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;

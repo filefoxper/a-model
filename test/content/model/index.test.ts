@@ -141,7 +141,25 @@ describe('model.createField', () => {
     expect(store.getInstance().count).not.toBe(result);
   });
 
-  test('使用 model.createField 创建的字段，可为运用于默认实例重选组合方案', () => {
+  test('使用 model.createField 创建的字段，可运用于默认实例重选组合方案', () => {
+    const store = model(counter)
+      .select(getInstance => {
+        return {
+          selectedInfo: model.createField(() => ({
+            symbol: getInstance().symbol
+          })),
+          ...getInstance()
+        };
+      })
+      .createStore(0);
+    const { subscribe, select } = createSelector(store);
+    const unsubscribe = subscribe();
+    select().decrease();
+    expect(select().selectedInfo.get().symbol).toBe('-');
+    unsubscribe();
+  });
+
+  test('默认实例重选组合方案中的字段可以使用实例对象提供的属性数据作为缓存依赖', () => {
     const symbols: any[] = [];
     const store = model(counter)
       .select(getInstance => {
@@ -151,6 +169,32 @@ describe('model.createField', () => {
               symbol: getInstance().symbol
             }),
             [getInstance().symbol]
+          ),
+          ...getInstance()
+        };
+      })
+      .createStore(0);
+    const { subscribe, select } = createSelector(store);
+    const unsubscribe = subscribe();
+    symbols.push(select().selectedInfo.get());
+    select().decrease();
+    symbols.push(select().selectedInfo.get());
+    select().decrease();
+    symbols.push(select().selectedInfo.get());
+    expect(symbols[1]).toBe(symbols[2]);
+    unsubscribe();
+  });
+
+  test('默认实例重选组合方案中的字段可以使用实例对象提供的字段作为缓存依赖', () => {
+    const symbols: any[] = [];
+    const store = model(counter)
+      .select(getInstance => {
+        return {
+          selectedInfo: model.createField(
+            () => ({
+              symbol: getInstance().cacheInfo.get().symbol
+            }),
+            [getInstance().cacheInfo]
           ),
           ...getInstance()
         };
