@@ -258,5 +258,5 @@ export declare function config(configuration: Config): {
   createStore: typeof createStore;
   createKey: typeof createKey;
   createStores: typeof createStores;
-  model: typeof model;
+  model: model;
 };
