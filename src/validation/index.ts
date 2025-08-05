@@ -1,7 +1,7 @@
-import { modelKeyIdentifier, modelUsageIdentifier } from '../identifiers';
+import { modelKeyIdentifier, modelStoreIdentifier, modelUsageIdentifier } from '../identifiers';
 import type { ModelInstance } from '../updater/type';
 import type { ModelKey } from '../key/type';
-import type { ModelUsage } from '../store/type';
+import type { ModelUsage, Store } from '../store/type';
 
 const noStateAModelKey = 'no-state-a-model-key';
 
@@ -23,10 +23,6 @@ function isInstanceFromNoStateModel(instance: unknown) {
   const ins = instance as { [noStateAModelKey]?: true };
   return !!ins[noStateAModelKey];
 }
-
-export const validations = {
-  isInstanceFromNoStateModel
-};
 
 export function isModelKey<
   S,
@@ -55,3 +51,24 @@ export function isModelUsage<
     (data as any).modelUsageIdentifier()
   );
 }
+
+export function isModelStore<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(data: unknown): data is Store<S, T, R> {
+  if (!data) {
+    return false;
+  }
+  return (
+    (data as any).modelStoreIdentifier === modelStoreIdentifier &&
+    (data as any).modelStoreIdentifier()
+  );
+}
+
+export const validations = {
+  isInstanceFromNoStateModel,
+  isModelKey,
+  isModelStore,
+  isModelUsage
+};

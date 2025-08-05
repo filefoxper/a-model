@@ -260,3 +260,29 @@ export declare function config(configuration: Config): {
   createStores: typeof createStores;
   model: model;
 };
+
+/** validations * */
+export declare const validations: {
+  isInstanceFromNoStateModel: (instance: unknown) => boolean;
+  isModelKey: <
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: unknown
+  ) => data is ModelKey<S, T, R>;
+  isModelStore: <
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: unknown
+  ) => data is Store<S, T, R>;
+  isModelUsage: <
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: unknown
+  ) => data is ModelUsage<S, T, R>;
+};

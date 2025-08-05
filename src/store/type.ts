@@ -82,6 +82,7 @@ export interface Store<
     callback?: (payload: P | undefined) => P | undefined
   ) => P | undefined;
   isDestroyed: () => boolean;
+  modelStoreIdentifier: () => boolean;
 }
 
 export interface SignalStore<
