@@ -5,3 +5,7 @@ export function modelKeyIdentifier() {
 export function modelUsageIdentifier() {
   return true;
 }
+
+export function modelStoreIdentifier() {
+  return true;
+}

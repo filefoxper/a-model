@@ -1,6 +1,6 @@
 import { createUpdater } from '../updater';
 import { isModelKey, isModelUsage } from '../validation';
-import { modelKeyIdentifier } from '../identifiers';
+import { modelKeyIdentifier, modelStoreIdentifier } from '../identifiers';
 import {
   extractInstance,
   createField as createInstanceField,
@@ -111,7 +111,8 @@ export function createStore<
     isDestroyed() {
       return updater.isDestroyed;
     },
-    updater
+    updater,
+    modelStoreIdentifier
   };
   return store;
 }
