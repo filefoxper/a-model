@@ -2,7 +2,7 @@ function isObject(data: any): data is Record<string, unknown> {
   return data && typeof data === 'object';
 }
 
-export function shallowEqual<R>(prev: R, current: R): boolean {
+export function shallowEqual(prev: unknown, current: unknown): boolean {
   if (Object.is(prev, current)) {
     return true;
   }
