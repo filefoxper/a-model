@@ -1,5 +1,5 @@
 import { createStore, createPrimaryKey } from '../store';
-import { isModelKey } from '../validation';
+import { isModelKey, validations } from '../validation';
 import type { Store, Key, StoreIndex, ModelUsage } from '../store/type';
 import type { ModelKey, StoreCollection } from './type';
 import type {
@@ -65,15 +65,20 @@ export function createStores(
         return;
       }
       storeUnits.forEach((un, i) => {
-        const key = keys[i];
-        if (!key) {
+        const keyLike = keys[i];
+        if (!keyLike) {
           return;
         }
+        const ifIsModelKey = validations.isModelKey(keyLike);
+        const key: Key = ifIsModelKey ? keyLike : keyLike.key;
         Object.assign(un, { key });
         un.update({
-          model: typeof key === 'function' ? key.source : key.key.source
+          model: ifIsModelKey ? keyLike.source : keyLike.key.source
         });
       });
+    },
+    keys() {
+      return storeUnits.map(({ key }) => key);
     },
     destroy() {
       storeUnits.forEach(unit => {
