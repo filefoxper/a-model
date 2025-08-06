@@ -64,3 +64,5 @@ export { createStore, createKey, createStores, model };
 export { createSignal, createSelector } from './store';
 
 export { validations } from './validation';
+
+export { shallowEqual } from './tools';

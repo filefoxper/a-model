@@ -290,3 +290,6 @@ export declare const validations: {
     data: unknown
   ) => data is ModelUsage<S, T, R>;
 };
+
+/** tools * */
+export declare function shallowEqual(prev: unknown, current: unknown): boolean;
