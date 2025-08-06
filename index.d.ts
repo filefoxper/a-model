@@ -107,25 +107,12 @@ export declare interface ModelKey<
   createStore: <D extends S>(state?: D) => Store<S, T, R>;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export declare interface createKey {
-  <
-    S,
-    T extends ModelInstance,
-    D extends S,
-    R extends (instance: () => T) => any = (instance: () => T) => T
-  >(
-    model: Model<S, T> | ModelUsage<S, T, R>,
-    state?: D
-  ): ModelKey<S, T, R>;
-  isModelKey: <
-    ST,
-    INS extends ModelInstance,
-    SE extends (instance: () => INS) => any = (instance: () => INS) => INS
-  >(
-    data: unknown
-  ) => data is ModelKey<ST, INS, SE>;
-}
+export declare function createKey<
+  S,
+  T extends ModelInstance,
+  D extends S,
+  R extends (instance: () => T) => any = (instance: () => T) => T
+>(model: Model<S, T> | ModelUsage<S, T, R>, state?: D): ModelKey<S, T, R>;
 
 /** createStores * */
 
@@ -256,9 +243,25 @@ export declare function createSelector<
 
 /** config * */
 export declare function config(configuration: Config): {
-  createStore: typeof createStore;
-  createKey: typeof createKey;
-  createStores: typeof createStores;
+  createStore: <
+    S,
+    T extends ModelInstance,
+    D extends S,
+    R extends (instance: () => T) => any = (instance: () => T) => T
+  >(
+    model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
+    state?: D
+  ) => Store<S, T, R>;
+  createKey: <
+    S,
+    T extends ModelInstance,
+    D extends S,
+    R extends (instance: () => T) => any = (instance: () => T) => T
+  >(
+    model: Model<S, T> | ModelUsage<S, T, R>,
+    state?: D
+  ) => ModelKey<S, T, R>;
+  createStores: (...modelKeys: (ModelKey | StoreIndex)[]) => StoreCollection;
   model: model;
 };
 
