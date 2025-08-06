@@ -19,5 +19,6 @@ export interface StoreCollection {
     key: ModelKey<S, T, R> | StoreIndex<S, T, R>
   ) => Store<S, T, R> | null;
   update: (...keys: (ModelKey | StoreIndex)[]) => void;
+  keys: () => Key[];
   destroy: () => void;
 }
