@@ -72,7 +72,7 @@ function wrapToActionMethod<S, T extends ModelInstance>(
     return cachedMethod;
   }
   const actionMethod = function actionMethod(...args: any[]) {
-    const { instance, model } = updater;
+    const { instance } = updater;
     const method = instance[methodName];
     if (typeof method !== 'function') {
       throw new Error('Can not change methods in runtime.');

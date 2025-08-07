@@ -85,19 +85,21 @@ export function generateNotifier<S, T extends ModelInstance>(
     const { dispatches, controlled } = updater;
     const dispatchCallbacks = [...dispatches];
     const { state } = action;
+    const nextInstance = model(state) as T;
+    const nextAction = { ...action, instance: nextInstance };
     if (!controlled) {
       updater.mutate(u => ({
         ...u,
         state,
-        instance: model(state) as T,
+        instance: nextInstance,
         version: u.version + 1
       }));
     }
     try {
       if (typeof config.batchNotify === 'function') {
-        config.batchNotify(dispatchCallbacks, action);
+        config.batchNotify(dispatchCallbacks, nextAction);
       } else {
-        defaultNotifyImplement(dispatchCallbacks, action);
+        defaultNotifyImplement(dispatchCallbacks, nextAction);
       }
     } catch (e) {
       updater.mutate(u => ({ ...u, dispatching: undefined }));
