@@ -66,6 +66,7 @@ export interface ModelUsage<
   ) => ModelUsage<S, T, C>;
   selector: R;
   modelUsageIdentifier: () => boolean;
+  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
 }
 
 export interface Store<
@@ -83,6 +84,7 @@ export interface Store<
   ) => P | undefined;
   isDestroyed: () => boolean;
   modelStoreIdentifier: () => boolean;
+  extends: <E extends Record<string, any>>(e: E) => Store<S, T, R> & E;
 }
 
 export interface SignalStore<

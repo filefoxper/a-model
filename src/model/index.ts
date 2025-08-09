@@ -39,6 +39,11 @@ export function configModel(config: Config) {
           : { ...config, selector: currentSelector }
       );
     };
+    modelWrapper.extends = function extendsModelUsage<
+      E extends Record<string, any>
+    >(e: E) {
+      return Object.assign(modelWrapper, e);
+    };
     modelWrapper.selector = currentSelector;
     modelWrapper.modelUsageIdentifier = modelUsageIdentifier;
     return modelWrapper;
