@@ -23,6 +23,11 @@ export function createKey<
   ) {
     return createStore(wrapModel, { ...config, ...storeConfig });
   };
+  wrapModel.extends = function extendsKey<E extends Record<string, any>>(
+    e: E
+  ): ModelKey<S, T, R> & E {
+    return Object.assign(wrapModel as ModelKey<S, T, R>, e);
+  };
   return wrapModel as ModelKey<S, T, R>;
 }
 

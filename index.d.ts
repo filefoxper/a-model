@@ -84,6 +84,7 @@ export declare interface Store<
     callback?: (payload: P | undefined) => P | undefined
   ) => P | undefined;
   isDestroyed: () => boolean;
+  extends: <E extends Record<string, any>>(e: E) => Store<S, T, R> & E;
 }
 
 export declare function createStore<
@@ -105,6 +106,7 @@ export declare interface ModelKey<
 > extends Key<S, T, R> {
   (s: S): T;
   createStore: <D extends S>(state?: D) => Store<S, T, R>;
+  extends: <E extends Record<string, any>>(e: E) => ModelKey<S, T, R> & E;
 }
 
 export declare function createKey<
@@ -147,6 +149,7 @@ export declare interface ModelUsage<
     s: C
   ) => ModelUsage<S, T, C>;
   selector: R;
+  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
 }
 
 declare type FieldStructure<R = any> = {

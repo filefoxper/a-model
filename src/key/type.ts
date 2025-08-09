@@ -8,6 +8,7 @@ export interface ModelKey<
 > extends Key<S, T, R> {
   (s: S): T;
   createStore: () => Store<S, T, R>;
+  extends: <E extends Record<string, any>>(e: E) => ModelKey<S, T, R> & E;
 }
 
 export interface StoreCollection {

@@ -111,6 +111,9 @@ export function createStore<
     isDestroyed() {
       return updater.isDestroyed;
     },
+    extends<E extends Record<string, any>>(e: E): Store<S, T, R> & E {
+      return Object.assign(store, e);
+    },
     updater,
     modelStoreIdentifier
   };
