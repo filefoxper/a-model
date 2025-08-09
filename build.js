@@ -11,7 +11,6 @@ function buildEsm() {
     entryPoints: ['src/**/*'],
     bundle: false,
     outdir,
-    plugins: [es5Plugin()],
     target: 'es2016',
     format: 'esm',
     loader: {}

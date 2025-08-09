@@ -199,9 +199,7 @@ declare interface SignalStore<
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
-    payload: <P>(
-      callback?: (payload: P | undefined) => P | undefined
-    ) => P | undefined;
+    store: Store<S, T, R>;
   };
 }
 

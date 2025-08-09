@@ -75,11 +75,7 @@ export function createSignal<
       signal.subscribe = function subscribe(dispatchCallback: Dispatch) {
         return store.subscribe(dispatchCallback);
       };
-      signal.payload = function payload<P>(
-        callback?: (payload: P | undefined) => P | undefined
-      ): P | undefined {
-        return store.payload<P>(callback);
-      };
+      signal.store = store;
       signalStore.enabled = true;
       signalStore.started = true;
       return signal;
