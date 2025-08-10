@@ -3,8 +3,24 @@ declare interface ModelInstance {
   [key: number]: any;
 }
 
+declare type FieldStructure<R = any> = {
+  callback: () => R;
+  deps: any[] | undefined;
+  identifier: (d: any) => d is FieldStructure<R>;
+  value: R;
+  get: () => R;
+};
+
+declare type MethodStructure<
+  R extends (...args: any[]) => any = (...args: any[]) => any
+> = R & {
+  identifier: (d: any) => d is MethodStructure;
+};
+
 declare type ValidInstance<S, T extends ModelInstance> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => S
+  [K in keyof T]: T[K] extends
+    | ((...args: any[]) => S)
+    | (((...args: any[]) => any) & { identifier: (d: any) => boolean })
     ? T[K]
     : T[K] extends (...args: any[]) => any
       ? never
@@ -78,7 +94,7 @@ export declare interface Store<
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getInstance: () => T;
-  update: (args?: { model?: Model<S, T>; state?: S }) => void;
+  update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
   destroy: () => void;
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined
@@ -151,20 +167,6 @@ export declare interface ModelUsage<
   selector: R;
   extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
 }
-
-declare type FieldStructure<R = any> = {
-  callback: () => R;
-  deps: any[] | undefined;
-  identifier: (d: any) => d is FieldStructure<R>;
-  value: R;
-  get: () => R;
-};
-
-declare type MethodStructure<
-  R extends (...args: any[]) => any = (...args: any[]) => any
-> = R & {
-  identifier: (d: any) => d is MethodStructure;
-};
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export declare interface model {
