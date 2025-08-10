@@ -1,12 +1,12 @@
 declare interface ModelInstance {
-  [key: string]: unknown;
-  [key: number]: unknown;
+  [key: string]: any;
+  [key: number]: any;
 }
 
 declare type ValidInstance<S, T extends ModelInstance> = {
-  [K in keyof T]: T[K] extends (...args: unknown[]) => S
+  [K in keyof T]: T[K] extends (...args: any[]) => S
     ? T[K]
-    : T[K] extends (...args: unknown[]) => unknown
+    : T[K] extends (...args: any[]) => any
       ? never
       : T[K];
 };
@@ -25,7 +25,7 @@ export declare type Action<S = any, T extends ModelInstance = ModelInstance> = {
   prevInstance?: T;
 };
 
-declare type Dispatch = (action: Action) => unknown;
+declare type Dispatch = (action: Action) => any;
 
 export declare interface Key<
   S = any,
@@ -154,8 +154,8 @@ export declare interface ModelUsage<
 
 declare type FieldStructure<R = any> = {
   callback: () => R;
-  deps: unknown[] | undefined;
-  identifier: (d: unknown) => d is FieldStructure<R>;
+  deps: any[] | undefined;
+  identifier: (d: any) => d is FieldStructure<R>;
   value: R;
   get: () => R;
 };
@@ -163,7 +163,7 @@ declare type FieldStructure<R = any> = {
 declare type MethodStructure<
   R extends (...args: any[]) => any = (...args: any[]) => any
 > = R & {
-  identifier: (d: unknown) => d is MethodStructure;
+  identifier: (d: any) => d is MethodStructure;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -178,7 +178,7 @@ export declare interface model {
   ): ModelUsage<S, T, R>;
   createField: <P extends () => any>(
     callback: P,
-    deps?: unknown[]
+    deps?: any[]
   ) => FieldStructure<ReturnType<P>>;
   createMethod: <P extends (...args: any[]) => any = (...args: any[]) => any>(
     method: P
@@ -268,29 +268,29 @@ export declare function config(configuration: Config): {
 
 /** validations * */
 export declare const validations: {
-  isInstanceFromNoStateModel: (instance: unknown) => boolean;
+  isInstanceFromNoStateModel: (instance: any) => boolean;
   isModelKey: <
     S,
     T extends ModelInstance,
     R extends (ins: () => T) => any = (ins: () => T) => T
   >(
-    data: unknown
+    data: any
   ) => data is ModelKey<S, T, R>;
   isModelStore: <
     S,
     T extends ModelInstance,
     R extends (ins: () => T) => any = (ins: () => T) => T
   >(
-    data: unknown
+    data: any
   ) => data is Store<S, T, R>;
   isModelUsage: <
     S,
     T extends ModelInstance,
     R extends (ins: () => T) => any = (ins: () => T) => T
   >(
-    data: unknown
+    data: any
   ) => data is ModelUsage<S, T, R>;
 };
 
 /** tools * */
-export declare function shallowEqual(prev: unknown, current: unknown): boolean;
+export declare function shallowEqual(prev: any, current: any): boolean;
