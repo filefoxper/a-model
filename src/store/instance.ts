@@ -57,7 +57,6 @@ export function createMethod<
   const replace = function replace(...args: any[]) {
     return method(...args);
   };
-  Object.assign(replace, method());
   replace.identifier = cacheIdentify.method;
   return replace as MethodStructure<R>;
 }
