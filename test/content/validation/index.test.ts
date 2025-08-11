@@ -36,3 +36,14 @@ describe('验证无状态模型实例', () => {
     expect(validations.isInstanceFromNoStateModel(1)).toBe(false);
   });
 });
+
+describe('验证对象是否为库', () => {
+  test('如果被验证对象为库对象，返回为 true', () => {
+    const store = createStore(counter);
+    expect(validations.isModelStore(store)).toBe(true);
+  });
+
+  test('如被验证对象不为库对象，返回 false', () => {
+    expect(validations.isModelStore({})).toBe(false);
+  });
+});

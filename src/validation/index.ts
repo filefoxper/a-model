@@ -1,4 +1,8 @@
-import { modelKeyIdentifier, modelStoreIdentifier, modelUsageIdentifier } from '../identifiers';
+import {
+  modelKeyIdentifier,
+  modelStoreIdentifier,
+  modelUsageIdentifier
+} from '../identifiers';
 import type { ModelInstance } from '../updater/type';
 import type { ModelKey } from '../key/type';
 import type { ModelUsage, Store } from '../store/type';

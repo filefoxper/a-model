@@ -77,7 +77,12 @@ export interface Store<
   subscribe: (dispatcher: Dispatch) => () => void;
   updater: Updater<S, T>;
   getInstance: () => T;
-  update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
+  update: (args?: {
+    model?: Model<S, T>;
+    key?: Key<S, T, R>;
+    initialState?: S;
+    state?: S;
+  }) => void;
   destroy: () => void;
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined

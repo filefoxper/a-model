@@ -79,10 +79,8 @@ export function generateNotifier<S, T extends ModelInstance>(
     });
   }
 
-  const { config, model } = updater;
-
   const dispatch = function dispatch(action: Action) {
-    const { dispatches, controlled } = updater;
+    const { dispatches, controlled, model, config } = updater;
     const dispatchCallbacks = [...dispatches];
     const { state } = action;
     const nextInstance = model(state) as T;

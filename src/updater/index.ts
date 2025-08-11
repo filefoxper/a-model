@@ -77,7 +77,9 @@ function createUpdateFn<S, T extends ModelInstance>(
         state,
         model,
         instance,
-        initialized: true
+        initialized: true,
+        cacheFields: {},
+        cacheMethods: {}
       };
     });
   };

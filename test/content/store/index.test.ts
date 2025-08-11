@@ -81,6 +81,31 @@ describe('使用 createStore 创建状态库', () => {
       ).toEqual(false);
     });
 
+    test('通过使用库的 update 方法可直接替换库的模型', () => {
+      const store = createStore(counter);
+      store.update({ initialState: 0 });
+      const updatedCounter = function updatedCounter(state: number) {
+        return {
+          count: state,
+          symbol: !state ? '' : state < 0 ? '-' : '+',
+          increase() {
+            return state + 2;
+          },
+          decrease() {
+            return state - 2;
+          }
+        };
+      };
+      store.getInstance().increase();
+      const initializedIncreasedCount = store.getInstance().count;
+      store.update({ model: updatedCounter });
+      store.getInstance().increase();
+      const updatedIncreasedCount = store.getInstance().count;
+      expect([initializedIncreasedCount, updatedIncreasedCount]).toEqual([
+        1, 3
+      ]);
+    });
+
     test('调用已初始化实例的方法，可更新状态刷新实例', () => {
       const store = createStore(counter, 0);
       const initializedInstance = store.getInstance();

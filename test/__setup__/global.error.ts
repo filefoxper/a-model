@@ -1,3 +1,3 @@
-process.on('unhandledRejection', (reason) => {
+process.on('unhandledRejection', (reason: unknown) => {
   console.log(reason);
 });

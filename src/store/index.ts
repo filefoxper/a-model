@@ -97,7 +97,25 @@ export function createStore<
       return disconnect;
     },
     getInstance,
-    update(args?: { model?: Model<S, T>; state?: S }) {
+    update(args?: {
+      model?: Model<S, T>;
+      key?: Key<S, T, R>;
+      initialState?: S;
+      state?: S;
+    }) {
+      const updateArgs = args ?? {};
+      if ('key' in updateArgs && updateArgs.key) {
+        const { key: updatingKey, model: updatingModel, ...rest } = updateArgs;
+        updater.update({ ...rest, model: updatingKey.source });
+        store.key = updatingKey;
+        return;
+      }
+      if ('model' in updateArgs && updateArgs.model) {
+        const { key: updatingKey, model: updatingModel, ...rest } = updateArgs;
+        updater.update({ ...rest, model: updatingModel });
+        store.key = createPrimaryKey<S, T, S, R>(updatingModel, config);
+        return;
+      }
       updater.update(args);
     },
     destroy() {
