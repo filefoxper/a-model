@@ -76,9 +76,8 @@ export function createStores(
         }
         const ifIsModelKey = validations.isModelKey(keyLike);
         const key: Key = ifIsModelKey ? keyLike : keyLike.key;
-        Object.assign(un, { key });
         un.update({
-          model: ifIsModelKey ? keyLike.source : keyLike.key.source
+          key
         });
       });
     },
