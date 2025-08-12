@@ -28,13 +28,9 @@ function createUpdateFn<S, T extends ModelInstance>(
   updater: Updater<S, T>,
   middleWare: MiddleWare
 ) {
-  return function update(
-    args: { model?: Model<S, T>; initialState?: S; state?: S } = {}
-  ) {
+  return function update(args: { model?: Model<S, T>; state?: S } = {}) {
     updater.mutate((u, effect): Updater<S, T> => {
       const model = args.model ?? u.model;
-      const initialState =
-        'initialState' in args ? (args.initialState as S) : u.state;
       const state = 'state' in args ? (args.state as S) : u.state;
       if (u.controlled) {
         const instance = model(state);
@@ -43,16 +39,18 @@ function createUpdateFn<S, T extends ModelInstance>(
       if (u.isDestroyed) {
         return u;
       }
-      if (!u.initialized && !('initialState' in args)) {
-        throw new Error('Should update initialState first.');
+      if (!u.initialized && !('state' in args)) {
+        throw new Error(
+          'The updater has not been initialized, it should be updated with a state for initializing.'
+        );
       }
       if (!u.initialized) {
-        const instance = model(initialState);
+        const instance = model(state);
         const initializedUpdater = createInitializedUpdater(u, middleWare);
         return {
           ...u,
           model,
-          state: initialState,
+          state,
           instance,
           initialized: true,
           ...initializedUpdater

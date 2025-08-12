@@ -75,7 +75,7 @@ describe('使用 createStore 创建状态库', () => {
 
     test('通过使用库的 update 方法可对未初始化的库进行初始化处理，并得到一个已初始化的实例', () => {
       const store = createStore(counter);
-      store.update({ initialState: 0 });
+      store.update({ state: 0 });
       expect(
         validations.isInstanceFromNoStateModel(store.getInstance())
       ).toEqual(false);
@@ -83,7 +83,7 @@ describe('使用 createStore 创建状态库', () => {
 
     test('通过使用库的 update 方法可直接替换库的模型', () => {
       const store = createStore(counter);
-      store.update({ initialState: 0 });
+      store.update({ state: 0 });
       const updatedCounter = function updatedCounter(state: number) {
         return {
           count: state,
@@ -124,15 +124,15 @@ describe('使用 createStore 创建状态库', () => {
     });
   });
 
-  describe('使用库的createTunnel方法可创建通道，用于监听库状态的更新情况', () => {
-    test('当使用通道的connect方法启动通道时，库的监听者数量会加1', () => {
+  describe('使用库的 subscribe 方法可订阅库状态的更新情况', () => {
+    test('当使用 subscribe 订阅时，库的监听者数量会加1', () => {
       const store = createStore(counter, 0);
       const unsubscribe = store.subscribe(noop);
       expect(store.updater.dispatches.length).toEqual(1);
       unsubscribe();
     });
 
-    test('当使用通道的connect方法启动通道时，监听函数可以接收到一个用于同步库状态的链接行为', () => {
+    test('当使用 subscribe 订阅时，监听函数可以接收到一个用于同步库状态的链接行为', () => {
       const store = createStore(counter, 0);
       const actionRecords: { type: null | string; state: unknown }[] = [];
       const unsubscribe = store.subscribe(action =>
@@ -142,7 +142,7 @@ describe('使用 createStore 创建状态库', () => {
       unsubscribe();
     });
 
-    test('当使用通道实例所提供的行为方法时，监听函数可以监听到当前发生的行为', () => {
+    test('当使用库存实例提供的行为方法时，监听函数可以监听到当前发生的行为', () => {
       const store = createStore(counter, 0);
       const actionRecords: { type: null | string; state: unknown }[] = [];
       const unsubscribe = store.subscribe(action =>
@@ -156,7 +156,7 @@ describe('使用 createStore 创建状态库', () => {
       unsubscribe();
     });
 
-    test('通道监听函数总是原子运行的，在监听函数一次运行结束前，不可能再次嵌套运行监听函数', () => {
+    test('监听函数总是原子运行的，在监听函数一次运行结束前，不可能再次嵌套运行监听函数', () => {
       const store = createStore(counter, 0);
       const actionTypeRecords: ('start' | 'end')[] = [];
       const unsubscribe = store.subscribe(action => {
@@ -177,7 +177,7 @@ describe('使用 createStore 创建状态库', () => {
       expect(actionTypeRecords).toEqual(['start', 'end', 'start', 'end']);
     });
 
-    test('通道监听函数按原子性运行的特性源于行为栈，在监听函数执行完毕前，行为栈不为空', () => {
+    test('监听函数按原子性运行的特性源于行为栈，在监听函数执行完毕前，行为栈不为空', () => {
       const store = createStore(counter, 0);
       const unsubscribe = store.subscribe(action => {
         if (action.type == null) {
@@ -189,7 +189,7 @@ describe('使用 createStore 创建状态库', () => {
       unsubscribe();
     });
 
-    test('当使用通道的disconnect方法时，通道会移除当的前监听函数', () => {
+    test('当使用 subscribe 返回的 unsubscribe 函数时，可移除当前订阅的监听函数', () => {
       const store = createStore(counter, 0);
       const actionRecords = [];
       const unsubscribe = store.subscribe(action => actionRecords.push(action));
@@ -223,6 +223,23 @@ describe('使用 createStore 创建状态库', () => {
       store.destroy();
       store.getInstance().increase();
       expect(store.getInstance().count).toBe(0);
+    });
+
+    test('当 subscribe 订阅的监听函数报错时，后续事件将被清空', () => {
+      const store = createStore(counter, 0);
+      store.subscribe(action => {
+        if (action.type !== 'increase') {
+          return;
+        }
+        store.getInstance().decrease();
+        throw new Error('err');
+      });
+      try {
+        store.getInstance().increase();
+      } catch (e) {
+        expect(store.updater.dispatching).toBeUndefined();
+      }
+      store.destroy();
     });
   });
 
@@ -364,7 +381,7 @@ describe('使用 createStore 创建状态库', () => {
     });
   });
 
-  describe('建立单通道的受控库', () => {
+  describe('建立受控库', () => {
     test('通过设置 controlled 字段，建立受控库', () => {
       const configState = { state: 0 };
       const store = config({ controlled: true }).createStore(
@@ -382,6 +399,29 @@ describe('使用 createStore 创建状态库', () => {
         configState.state
       ]);
       unsubscribe();
+    });
+  });
+
+  describe('监听函数异常处理', () => {
+    test('通过设置  notify，可介入事件分发过程中的异常处理', () => {
+      const errs: any[] = [];
+      const store = config({
+        notify(notifier, action) {
+          const { errors } = notifier(action);
+          if (errors != null) {
+            errors.forEach(e => errs.push(e));
+          }
+          return errors;
+        }
+      }).createStore(counter, 0);
+      store.subscribe(action => {
+        if (action.type == null) {
+          return;
+        }
+        throw new Error('err');
+      });
+      store.getInstance().increase();
+      expect(errs.map((t: any) => t.message)).toEqual(['err']);
     });
   });
 

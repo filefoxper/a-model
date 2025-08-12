@@ -3,7 +3,7 @@ declare interface ModelInstance {
   [key: number]: any;
 }
 
-declare type FieldStructure<R = any> = {
+export declare type FieldStructure<R = any> = {
   callback: () => R;
   deps: any[] | undefined;
   identifier: (d: any) => d is FieldStructure<R>;
@@ -11,7 +11,7 @@ declare type FieldStructure<R = any> = {
   get: () => R;
 };
 
-declare type MethodStructure<
+export declare type MethodStructure<
   R extends (...args: any[]) => any = (...args: any[]) => any
 > = R & {
   identifier: (d: any) => d is MethodStructure;
@@ -41,7 +41,7 @@ export declare type Action<S = any, T extends ModelInstance = ModelInstance> = {
   prevInstance?: T;
 };
 
-declare type Dispatch = (action: Action) => any;
+export declare type Dispatch = (action: Action) => any;
 
 export declare interface Key<
   S = any,
@@ -71,10 +71,10 @@ export declare type MiddleWare = (
 export declare interface Config {
   middleWares?: MiddleWare[];
   controlled?: boolean;
-  batchNotify?: (
-    listeners: ((action: Action) => void)[],
+  notify?: (
+    notifier: (action: Action) => { errors: any[] | undefined },
     action: Action
-  ) => void;
+  ) => any;
 }
 
 /** createStore * */

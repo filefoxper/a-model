@@ -1,3 +1,4 @@
+import { simpleErrorProcess } from '../tools';
 import type {
   Action,
   ActionWrap,
@@ -81,7 +82,6 @@ export function generateNotifier<S, T extends ModelInstance>(
 
   const dispatch = function dispatch(action: Action) {
     const { dispatches, controlled, model, config } = updater;
-    const dispatchCallbacks = [...dispatches];
     const { state } = action;
     const nextInstance = model(state) as T;
     const nextAction = { ...action, instance: nextInstance };
@@ -93,11 +93,29 @@ export function generateNotifier<S, T extends ModelInstance>(
         version: u.version + 1
       }));
     }
+    const notifyAction = function notifyAction(act: Action) {
+      const errors: any[] = [];
+      const dispatchCallbacks = dispatches.map(simpleErrorProcess(errors));
+      defaultNotifyImplement(dispatchCallbacks, act);
+      if (!errors.length) {
+        return { errors: undefined };
+      }
+      return { errors };
+    };
+    const notifyActionWithErrorThrow = function notifyActionWithErrorThrow(
+      act: Action
+    ) {
+      const { errors } = notifyAction(act);
+      if (!errors || !errors.length) {
+        return;
+      }
+      throw errors[0];
+    };
     try {
-      if (typeof config.batchNotify === 'function') {
-        config.batchNotify(dispatchCallbacks, nextAction);
+      if (typeof config.notify === 'function') {
+        config.notify(notifyAction, nextAction);
       } else {
-        defaultNotifyImplement(dispatchCallbacks, nextAction);
+        notifyActionWithErrorThrow(nextAction);
       }
     } catch (e) {
       updater.mutate(u => ({ ...u, dispatching: undefined }));

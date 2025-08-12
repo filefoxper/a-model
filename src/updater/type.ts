@@ -40,10 +40,10 @@ export interface FirstActionWrap extends ActionWrap {
 export interface Config {
   middleWares?: MiddleWare[];
   controlled?: boolean;
-  batchNotify?: (
-    listeners: ((action: Action) => void)[],
+  notify?: (
+    notifier: (action: Action) => { errors: any[] | undefined },
     action: Action
-  ) => void;
+  ) => any;
 }
 
 export interface UpdaterStore<
@@ -88,7 +88,7 @@ export type Updater<S, T extends ModelInstance> = {
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined
   ) => P | undefined;
-  update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
+  update: (args?: { model?: Model<S, T>; state?: S }) => void;
   notify: (action: Action | null) => void;
   mutate: (
     callback: (
