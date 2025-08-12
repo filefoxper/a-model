@@ -22,7 +22,7 @@ describe('验证无状态模型实例', () => {
 
   test('通过使用库的 update 方法代入初始化状态，可以分离库的创建与初始化步骤', () => {
     const store = createStore(counter);
-    store.update({ initialState: 0 });
+    store.update({ state: 0 });
     expect(validations.isInstanceFromNoStateModel(store.getInstance())).toBe(
       false
     );
