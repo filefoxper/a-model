@@ -1,4 +1,5 @@
 import { simpleErrorProcess } from '../tools';
+import { createToken } from './token';
 import type {
   Action,
   ActionWrap,
@@ -90,7 +91,8 @@ export function generateNotifier<S, T extends ModelInstance>(
         ...u,
         state,
         instance: nextInstance,
-        version: u.version + 1
+        version: u.version + 1,
+        token: createToken()
       }));
     }
     const notifyAction = function notifyAction(act: Action) {

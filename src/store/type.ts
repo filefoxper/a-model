@@ -2,6 +2,7 @@ import type {
   Dispatch,
   Model,
   ModelInstance,
+  Token,
   Updater,
   ValidInstance
 } from '../updater/type';
@@ -88,6 +89,7 @@ export interface Store<
   ) => P | undefined;
   isDestroyed: () => boolean;
   modelStoreIdentifier: () => boolean;
+  getToken: () => Token;
   extends: <E extends Record<string, any>>(e: E) => Store<S, T, R> & E;
 }
 
@@ -104,6 +106,7 @@ export interface SignalStore<
     subscribe: (dispatcher: Dispatch) => () => void;
     store: Store<S, T, R>;
   };
+  getToken: () => Token;
 }
 
 export interface SelectorOption<T = any> {

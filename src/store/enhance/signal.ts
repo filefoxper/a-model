@@ -46,6 +46,9 @@ export function createSignal<
   const { key: storeKey } = store;
   return {
     key: storeKey,
+    getToken() {
+      return store.getToken();
+    },
     subscribe(dispatcher?: Dispatch): () => void {
       return store.subscribe(enhance(dispatcher));
     },

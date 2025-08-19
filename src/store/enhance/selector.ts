@@ -198,6 +198,9 @@ export function createSelector<
   }
   return {
     key: store.key,
+    getToken() {
+      return store.getToken();
+    },
     subscribe(dispatcher?: Dispatch): () => void {
       return store.subscribe(enhance(dispatcher));
     },

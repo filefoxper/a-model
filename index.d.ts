@@ -41,6 +41,11 @@ export declare type Action<S = any, T extends ModelInstance = ModelInstance> = {
   prevInstance?: T;
 };
 
+export interface Token {
+  isDifferent: (token: Token) => boolean;
+  value: unknown;
+}
+
 export declare type Dispatch = (action: Action) => any;
 
 export declare interface Key<
@@ -93,6 +98,7 @@ export declare interface Store<
   R extends (instance: () => T) => any = (instance: () => T) => T
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
+  getToken: () => Token;
   getInstance: () => T;
   update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
   destroy: () => void;
@@ -195,6 +201,7 @@ declare interface SignalStore<
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => any
 > extends StoreIndex<S, T, R> {
+  getToken: () => Token;
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
     (): T;
@@ -230,6 +237,7 @@ declare interface SelectorStore<
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => any
 > extends StoreIndex<S, T, R> {
+  getToken: () => Token;
   subscribe: (dispatcher: Dispatch) => () => void;
   select: SelectMethod<T, R>;
 }

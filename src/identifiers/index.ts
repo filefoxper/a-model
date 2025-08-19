@@ -9,3 +9,7 @@ export function modelUsageIdentifier() {
 export function modelStoreIdentifier() {
   return true;
 }
+
+export function tokenIdentifier() {
+  return true;
+}
