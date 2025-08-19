@@ -51,7 +51,7 @@ function createUpdateFn<S, T extends ModelInstance>(
       if (u.isDestroyed) {
         return u;
       }
-      if (!u.initialized && !('state' in args)) {
+      if (!u.initialized && !hasState && !hasInitialState) {
         throw new Error(
           'The updater has not been initialized, it should be updated with a state for initializing.'
         );
