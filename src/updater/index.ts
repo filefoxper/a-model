@@ -5,6 +5,7 @@ import {
   createUnInitializedUpdater,
   destroy
 } from './tunnel';
+import { createToken } from './token';
 import type {
   Model,
   ModelInstance,
@@ -32,6 +33,7 @@ function createUpdateFn<S, T extends ModelInstance>(
     updater.mutate((u, effect): Updater<S, T> => {
       const model = args.model ?? u.model;
       const state = 'state' in args ? (args.state as S) : u.state;
+      const token = createToken();
       if (u.controlled) {
         const instance = model(state);
         return { ...u, state, instance, model };
@@ -53,6 +55,7 @@ function createUpdateFn<S, T extends ModelInstance>(
           state,
           instance,
           initialized: true,
+          token,
           ...initializedUpdater
         };
       }
@@ -75,6 +78,7 @@ function createUpdateFn<S, T extends ModelInstance>(
         state,
         model,
         instance,
+        token,
         initialized: true,
         cacheFields: {},
         cacheMethods: {}
@@ -99,6 +103,7 @@ export function createUpdater<S, T extends ModelInstance>(
   const updater: Updater<S, T> = {
     sidePayload: undefined,
     version: 0,
+    token: createToken(),
     isDestroyed: false,
     model,
     instance: defaultInstance,

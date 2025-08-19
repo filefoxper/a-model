@@ -1,9 +1,10 @@
 import {
   modelKeyIdentifier,
   modelStoreIdentifier,
-  modelUsageIdentifier
+  modelUsageIdentifier,
+  tokenIdentifier
 } from '../identifiers';
-import type { ModelInstance } from '../updater/type';
+import type { ModelInstance, Token } from '../updater/type';
 import type { ModelKey } from '../key/type';
 import type { ModelUsage, Store } from '../store/type';
 
@@ -70,9 +71,20 @@ export function isModelStore<
   );
 }
 
+export function isToken(data: unknown): data is Token {
+  if (!data) {
+    return false;
+  }
+  return (
+    (data as any).tokenIdentifier === tokenIdentifier &&
+    (data as any).tokenIdentifier()
+  );
+}
+
 export const validations = {
   isInstanceFromNoStateModel,
   isModelKey,
   isModelStore,
-  isModelUsage
+  isModelUsage,
+  isToken
 };

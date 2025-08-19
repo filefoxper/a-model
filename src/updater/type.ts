@@ -65,9 +65,15 @@ export interface StateConfig<S, R extends (ins: any) => any = (ins: any) => any>
   middleWares?: MiddleWare[];
 }
 
+export interface Token {
+  isDifferent: (token: Token) => boolean;
+  value: unknown;
+}
+
 export type Updater<S, T extends ModelInstance> = {
   sidePayload: unknown | undefined;
   version: number;
+  token: Token;
   isDestroyed: boolean;
   isSubscribing: boolean;
   dispatching?: FirstActionWrap;

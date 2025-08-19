@@ -91,6 +91,9 @@ export function createStore<
   };
   const store: Store<S, T, R> = {
     key,
+    getToken() {
+      return updater.token;
+    },
     subscribe(dispatcher: Dispatch) {
       const { connect, disconnect } = updater.createTunnel(dispatcher);
       connect();
