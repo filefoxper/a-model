@@ -100,7 +100,11 @@ export declare interface Store<
   subscribe: (dispatcher: Dispatch) => () => void;
   getToken: () => Token;
   getInstance: () => T;
-  update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
+  update: (args?: {
+    model?: Model<S, T>;
+    key?: Key<S, T, R>;
+    state?: S;
+  }) => void;
   destroy: () => void;
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined
