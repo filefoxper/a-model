@@ -29,10 +29,18 @@ function createUpdateFn<S, T extends ModelInstance>(
   updater: Updater<S, T>,
   middleWare: MiddleWare
 ) {
-  return function update(args: { model?: Model<S, T>; state?: S } = {}) {
+  return function update(
+    args: { model?: Model<S, T>; initialState?: S; state?: S } = {}
+  ) {
     updater.mutate((u, effect): Updater<S, T> => {
       const model = args.model ?? u.model;
-      const state = 'state' in args ? (args.state as S) : u.state;
+      const hasState = Object.prototype.hasOwnProperty.call(args, 'state');
+      const hasInitialState = Object.prototype.hasOwnProperty.call(
+        args,
+        'initialState'
+      );
+      const state = hasState ? (args.state as S) : u.state;
+      const isInitialize = !u.initialized || hasInitialState;
       const token = createToken();
       if (u.controlled) {
         const instance = model(state);
@@ -46,8 +54,9 @@ function createUpdateFn<S, T extends ModelInstance>(
           'The updater has not been initialized, it should be updated with a state for initializing.'
         );
       }
-      if (!u.initialized) {
-        const instance = model(state);
+      if (isInitialize) {
+        const initialState = hasInitialState ? (args.initialState as S) : state;
+        const instance = model(initialState);
         const initializedUpdater = createInitializedUpdater(u, middleWare);
         return {
           ...u,

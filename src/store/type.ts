@@ -81,6 +81,7 @@ export interface Store<
   update: (args?: {
     model?: Model<S, T>;
     key?: Key<S, T, R>;
+    initialState?: S;
     state?: S;
   }) => void;
   destroy: () => void;
