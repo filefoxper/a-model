@@ -62,23 +62,19 @@ function createUpdateFn<S, T extends ModelInstance>(
       if (Object.is(u.model, model) && Object.is(u.state, state)) {
         return u;
       }
-      const instance = model(state);
       effect(up => {
         up.notify({
           type: null,
           method: null,
           prevInstance: u.instance,
-          instance,
+          instance: u.instance,
           prevState: u.state,
           state
         });
       });
       return {
         ...u,
-        state,
         model,
-        instance,
-        token,
         initialized: true,
         cacheFields: {},
         cacheMethods: {}

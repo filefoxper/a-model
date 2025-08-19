@@ -100,12 +100,7 @@ export function createStore<
       return disconnect;
     },
     getInstance,
-    update(args?: {
-      model?: Model<S, T>;
-      key?: Key<S, T, R>;
-      initialState?: S;
-      state?: S;
-    }) {
+    update(args?: { model?: Model<S, T>; key?: Key<S, T, R>; state?: S }) {
       const updateArgs = args ?? {};
       if ('key' in updateArgs && updateArgs.key) {
         const { key: updatingKey, model: updatingModel, ...rest } = updateArgs;
