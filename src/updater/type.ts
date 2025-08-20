@@ -70,6 +70,11 @@ export interface Token {
   value: unknown;
 }
 
+export interface Dispatcher {
+  dispatch: Dispatch;
+  accessible: boolean;
+}
+
 export type Updater<S, T extends ModelInstance> = {
   sidePayload: unknown | undefined;
   version: number;
@@ -81,8 +86,8 @@ export type Updater<S, T extends ModelInstance> = {
   controlled: boolean;
   model: Model<S, T>;
   dispatch: Dispatch | null;
-  dispatches: Dispatch[];
-  temporaryDispatches: Dispatch[];
+  dispatches: Dispatcher[];
+  temporaryDispatches: Dispatcher[];
   cacheFields: Record<
     string,
     { value: any; getter: { get: () => any }; deps?: unknown[] } | null

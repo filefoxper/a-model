@@ -57,20 +57,21 @@ export function generateTunnelCreator<S, T extends ModelInstance>(
       controlled: isControlled
     } = updater;
     const copied = [...dispatches, ...temporaryDispatches];
-    const exist = copied.indexOf(dispatchFn) >= 0;
+    const exist = copied.some(d => d.dispatch === dispatchFn);
     if (exist) {
       return updater.mutate(u => ({ ...u, isDestroyed: false }));
     }
+    const dispatcher = { dispatch: dispatchFn, accessible: true };
     if (isControlled) {
       return updater.mutate(u => ({
         ...u,
-        dispatches: [dispatchFn],
+        dispatches: [dispatcher],
         isDestroyed: false
       }));
     }
     return updater.mutate((u, effect) => {
       const { temporaryDispatches: tds, dispatches: ds } = u;
-      const nextTds = [...tds, dispatchFn];
+      const nextTds = [...tds, dispatcher];
       if (u.dispatching) {
         return {
           ...u,
@@ -88,7 +89,7 @@ export function generateTunnelCreator<S, T extends ModelInstance>(
           method: null
         };
         nextTds.forEach(td => {
-          td(initializedAction);
+          td.dispatch(initializedAction);
         });
       });
       return {
@@ -99,15 +100,17 @@ export function generateTunnelCreator<S, T extends ModelInstance>(
       };
     });
   }
-  return function tunnel(dispatcher: Dispatch) {
+  return function tunnel(dispatchFn: Dispatch) {
     function disconnect() {
       updater.mutate(u => {
         const { dispatches: ds, temporaryDispatches: tds } = u;
-        const nextDs = ds.filter(d => d !== dispatcher);
-        const nextTds = tds.filter(d => d !== dispatcher);
-        if (ds.length === nextDs.length && tds.length === nextTds.length) {
+        const found = [...ds, ...tds].find(d => d.dispatch === dispatchFn);
+        if (!found) {
           return u;
         }
+        found.accessible = false;
+        const nextDs = ds.filter(d => d !== found);
+        const nextTds = tds.filter(d => d !== found);
         return {
           ...u,
           dispatches: nextDs,
@@ -117,7 +120,7 @@ export function generateTunnelCreator<S, T extends ModelInstance>(
     }
     return {
       connect() {
-        subscribe(dispatcher);
+        subscribe(dispatchFn);
       },
       disconnect() {
         disconnect();

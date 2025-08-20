@@ -76,8 +76,11 @@ export function generateNotifier<S, T extends ModelInstance>(
       type: null,
       method: null
     };
-    temporaryDispatches.forEach(call => {
-      call(initializedAction);
+    temporaryDispatches.forEach(d => {
+      if (!d.accessible) {
+        return;
+      }
+      d.dispatch(initializedAction);
     });
   }
 
@@ -97,7 +100,15 @@ export function generateNotifier<S, T extends ModelInstance>(
     }
     const notifyAction = function notifyAction(act: Action) {
       const errors: any[] = [];
-      const dispatchCallbacks = dispatches.map(simpleErrorProcess(errors));
+      const dispatchWrap = simpleErrorProcess(errors);
+      const dispatchCallbacks = dispatches.map(d => {
+        return dispatchWrap(function dispatchCallback(ac: Action) {
+          if (!d.accessible) {
+            return;
+          }
+          d.dispatch(ac);
+        });
+      });
       defaultNotifyImplement(dispatchCallbacks, act);
       if (!errors.length) {
         return { errors: undefined };
