@@ -94,6 +94,10 @@ export interface Store<
   extends: <E extends Record<string, any>>(e: E) => Store<S, T, R> & E;
 }
 
+export interface SignalOptions {
+  cutOff?: boolean;
+}
+
 export interface SignalStore<
   S = any,
   T extends ModelInstance = any,
@@ -101,7 +105,7 @@ export interface SignalStore<
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
-    (): T;
+    (options?: SignalOptions): T;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
