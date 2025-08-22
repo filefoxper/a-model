@@ -200,6 +200,10 @@ export declare interface model {
 
 /** createSignal * */
 
+export interface SignalOptions {
+  cutOff?: boolean;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 declare interface SignalStore<
   S = any,
@@ -209,7 +213,7 @@ declare interface SignalStore<
   getToken: () => Token;
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
-    (): T;
+    (options?: SignalOptions): T;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
