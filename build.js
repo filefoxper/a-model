@@ -10,6 +10,7 @@ function buildEsm() {
   return esbuild.build({
     entryPoints: ['src/**/*'],
     bundle: false,
+    plugins: [es5Plugin()],
     outdir,
     target: 'es2016',
     format: 'esm',

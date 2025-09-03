@@ -1,6 +1,7 @@
 import { createUpdater } from '../updater';
 import { isModelKey, isModelUsage } from '../validation';
 import { modelKeyIdentifier, modelStoreIdentifier } from '../identifiers';
+import { simpleReduce } from '../tools';
 import {
   extractInstance,
   createField as createInstanceField,
@@ -79,9 +80,13 @@ export function createStore<
       const updateMiddleWares = [...middleWares].reverse().map(middleWare => {
         return middleWare(s);
       });
-      return updateMiddleWares.reduce((finalDispatcher, um) => {
-        return um(finalDispatcher);
-      }, next);
+      return simpleReduce(
+        updateMiddleWares,
+        (finalDispatcher, um) => {
+          return um(finalDispatcher);
+        },
+        next
+      );
     };
   };
   const updater = createUpdater(model, combinedMiddleWare, conf);

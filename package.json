@@ -25,6 +25,9 @@
     "test": "jest --coverage"
   },
   "typings": "index.d.ts",
+  "dependencies": {
+    "@swc/helpers": "^0.5.17"
+  },
   "devDependencies": {
     "@babel/cli": "^7.27.2",
     "@babel/core": "^7.27.4",

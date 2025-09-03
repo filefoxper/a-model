@@ -17,3 +17,5 @@ export function simpleErrorProcess(errors: any[]) {
 export { createSimpleProxy, createProxy } from './proxy';
 
 export { shallowEqual } from './shallowEqual';
+
+export * from './polyfill';

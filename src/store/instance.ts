@@ -1,4 +1,4 @@
-import { createProxy, shallowEqual } from '../tools';
+import { createProxy, shallowEqual, simpleFlatMap } from '../tools';
 import type { FieldStructure, MethodStructure } from './type';
 import type { Action, ModelInstance, Updater } from '../updater/type';
 
@@ -32,7 +32,7 @@ export function createField<R extends () => any>(
     if (deps.some(d => cacheIdentify.field(d) && d.deps == null)) {
       return undefined;
     }
-    return deps.flatMap(d => {
+    return simpleFlatMap(deps, d => {
       if (cacheIdentify.field(d)) {
         return d.deps;
       }
