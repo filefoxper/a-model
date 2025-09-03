@@ -1,7 +1,6 @@
 import { cacheIdentify, extractInstance } from '../instance';
-import { shallowEqual } from '../../tools';
+import type { SignalOptions, SignalStore, Store } from '../type';
 import type { Action, Dispatch, ModelInstance } from '../../updater/type';
-import type { SignalStore, Store } from '../type';
 
 export function createSignal<
   S,
@@ -28,17 +27,20 @@ export function createSignal<
         dispatcher?.(action);
         return;
       }
-      const current = extractInstance(store.updater);
+      const storeInstance = extractInstance(store.updater);
       const keys = Object.keys(collection);
-      const currentCollectionEntries = keys.map((key): [string, any] => {
-        const field = current[key];
-        if (cacheIdentify.field(field)) {
-          return [key, field.get()];
+      if (!keys.length) {
+        return;
+      }
+      const hasChange = keys.some(key => {
+        const field = storeInstance[key];
+        const collectedField = collection[key];
+        if (cacheIdentify.field(field) && cacheIdentify.field(collectedField)) {
+          return field.get() !== collectedField.get();
         }
-        return [key, field];
+        return field !== collectedField;
       });
-      const currentCollection = Object.fromEntries(currentCollectionEntries);
-      if (!shallowEqual(collection, currentCollection)) {
+      if (hasChange) {
         dispatcher?.(action);
       }
     };
@@ -63,11 +65,15 @@ export function createSignal<
         signalStore.collection = signalStore.collection || {};
         signalStore.collection[key] = val;
       };
-      const getInstance = function getInstance() {
-        return extractInstance(store.updater, collectUsedFields);
+      const getInstance = function getInstance(options?: SignalOptions) {
+        const { cutOff } = options ?? {};
+        return extractInstance(
+          store.updater,
+          cutOff ? undefined : collectUsedFields
+        );
       };
-      const signal = function signal() {
-        return getInstance();
+      const signal = function signal(options?: SignalOptions) {
+        return getInstance(options);
       };
       signal.startStatistics = function startStatistics() {
         signalStore.started = true;
