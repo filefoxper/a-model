@@ -46,7 +46,7 @@ function createUpdateFn<S, T extends ModelInstance>(
         const controlledState =
           hasInitialState && !hasState ? (args.initialState as S) : state;
         const instance = model(controlledState);
-        return { ...u, state, instance, model };
+        return { ...u, state: controlledState, instance, model };
       }
       if (u.isDestroyed) {
         return u;
@@ -63,7 +63,7 @@ function createUpdateFn<S, T extends ModelInstance>(
         return {
           ...u,
           model,
-          state,
+          state: initialState,
           instance,
           initialized: true,
           token,
