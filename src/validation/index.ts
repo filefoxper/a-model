@@ -6,7 +6,7 @@ import {
 } from '../identifiers';
 import type { ModelInstance, Token } from '../updater/type';
 import type { ModelKey } from '../key/type';
-import type { ModelUsage, Store } from '../store/type';
+import type { ModelUsage, Store, StoreIndex } from '../store/type';
 
 const noStateAModelKey = 'no-state-a-model-key';
 
@@ -81,10 +81,22 @@ export function isToken(data: unknown): data is Token {
   );
 }
 
+export function isStoreIndex<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(data: unknown): data is StoreIndex<S, T, R> {
+  if (!data) {
+    return false;
+  }
+  return !!(data as any).key && isModelKey((data as any).key);
+}
+
 export const validations = {
   isInstanceFromNoStateModel,
   isModelKey,
   isModelStore,
   isModelUsage,
-  isToken
+  isToken,
+  isStoreIndex
 };

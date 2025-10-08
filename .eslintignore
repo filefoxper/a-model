@@ -7,4 +7,5 @@ jest.config.js
 babel.config.js
 babel.es.config.js
 babel.esm.config.js
+build.js
 index.js
