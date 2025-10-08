@@ -73,7 +73,7 @@ store0?.getInstance().increase();
 console.log(store0?.getInstance().count); // 1
 ```
 
-Model key is a template for creating multiple stores, and it is also an identifier to find the rightstore from multiple stores.
+Model key is a template for creating multiple stores, and it is also an identifier to find the right store from multiple stores.
 
 Use **model** API to create store or key.
 
@@ -86,7 +86,7 @@ const key = model(counting).createKey(0);
 ......
 ```
 
-In typescript develop environment, `model` API can do a type check for making sure the model action method returns a correct type.
+In typescript develop environment, `model` API can do a type check for making sure every model action method returns a correct type.
 
 ```js
 // ts
@@ -111,7 +111,7 @@ const key = counting.createKey(0);
 ......
 ```
 
-Sync store
+Subscribe store
 
 ```js
 import {counting} from './model';
@@ -150,6 +150,7 @@ const store = model(counting).select((getInstance)=>{
         }
     }
 }).createStore(0);
+
 const {subscribe, select} = createSelector(store);
 const unsubscribe = subscribe();
 // When use select with no parameter,
@@ -159,7 +160,7 @@ await delayIncrease();
 select().count // 1
 ```
 
-Sync store with state in react hooks:
+Subscribe store in react hooks:
 
 ```js
 import {model, createStores} from 'as-model';
@@ -304,13 +305,15 @@ A store object with model key and methods. The store object has `getInstance` me
     getInstance: ()=>instance,
     subscribe: (listener)=>unsubscribe,
     key: modelKey,
-    destroy: ()=>void
+    destroy: ()=>void,
     update: (
         data:{
             model?:modelFn, 
+            key?: modelKey,
             initialState?: any
+            state?: any;
         }
-    )=>void
+    )=>void,
 }
 ```
 
@@ -333,14 +336,14 @@ A model key function with `createStore` method to create a store with the model 
 
 ```js
 {
-    createStore: (initialState?)=>store
+    createStore: (initialState?)=>Store
 }
 ```
 
 ### createStores
 
 ```js
-function createStores(...keys):stores
+function createStores(...keys):StoreCollection
 ```
 
 #### parameters
@@ -349,9 +352,9 @@ function createStores(...keys):stores
 
 #### return
 
-Multiple stores created by the model keys.
+StoreCollection created by the model keys.
 
-**stores** structure:
+**StoreCollection** structure:
 
 ```js
 {
@@ -372,19 +375,28 @@ function createSignal(store):SignalStore
 
 #### return
 
-Signal store object with `subscribe` method to subscribe the state changes, and `getSignal` method to get the signal callback function.
+Signal store object with `subscribe` method to subscribe the state changes, and `getSignal` method to get the Signal callback function.
 
-**signalAPI** structure:
+**SignalStore** structure:
 
 ```js
 {
     subscribe: (listener)=>unsubscribe,
-    getSignal: ()=>signal,
+    getSignal: ()=>Signal,
     key: modelKey,
 }
 ```
 
-The signal function returns a real time instance from store. Only when the properties picked from real time instance are changed, the subscribed listener can receive an action notification.
+The Signal function returns a real time instance from store. Only when the properties picked from real time instance are changed, the subscribed listener can receive an action notification.
+
+```js
+// Signal
+function signal():instance;
+// to start statistic the picked properties change
+signal.startStatistics():void;
+// to end statistic the picked properties change
+signal.stopStatistics():void;
+```
 
 ### createSelector
 
@@ -398,6 +410,7 @@ function createSelector(store, opts?:SelectorOptions):SelectorStore
 * opts - (Optional) an object config to optimize createSelector.
   
  ```js
+ // opts
   {
     // When the selector is drived to reproduce a new data,
     // it compares if the result is different with the previous one,
@@ -423,7 +436,7 @@ function createSelector(store, opts?:SelectorOptions):SelectorStore
 ### model
 
 ```js
-function model(modelFn):modelAPI
+function model(modelFn):ModelUsage
 ```
 
 #### parameters
@@ -432,9 +445,9 @@ function model(modelFn):modelAPI
 
 #### return
 
-Model api object with `createStore`, `createKey` methods to create store, key for the model function, and `select` method to set a default selector function (Use `createSelector(store).select()` to select the default one). 
+ModelUsage object with `createStore`, `createKey` methods to create store, key for the model function, and `select` method to set a default selector function (Use `createSelector(store).select()` to select the default one). 
 
-**modelAPI** structure:
+**ModelUsage** structure:
 
 ```js
 {
@@ -442,7 +455,7 @@ Model api object with `createStore`, `createKey` methods to create store, key fo
     createKey: (initialState?)=> key,
     select: (
       selector:(getInstance:()=>Instance)=>Record<string, any>|Array<any>
-    )=>modelApI 
+    )=>ModelUsage 
 }
 ```
 
@@ -454,10 +467,10 @@ function config(options):configAPI
 
 #### parameters
 
-* options - (Optional) an object with the following properties:
-  * batchNotify - (Optional) a callback function to batch notify the listeners, for example: `unstable_batchedUpdates` from react-dom.
-  * controlled - (Optional) a boolean state to tell as-model use controlled mode to output instance changes.
-  * middleWares - (Optional) a middleWare array for reproducing state or ignore actions.
+##### options - (Optional) an object with the following properties:
+* notify - (Optional) a callback function for noticing an action to every subscriber, it accepts a notifier function and an action as parameters.
+* controlled - (Optional) a boolean state to tell as-model use controlled mode to output instance changes.
+* middleWares - (Optional) a middleWare array for reproducing state or ignore actions.
 
 #### return
 
@@ -468,9 +481,71 @@ All apis above except `createSignal` and `createSelector` API.
     createStore: (modelFnOrKey, initialState?)=>store,
     createKey: (modelFn, initialState?)=>key,
     createStores: (...keys)=>stores,
-    model: (modelFn)=>modelAPI
+    model: (modelFn)=>ModelUsage
 }
 ```
+
+### validations
+
+A validate callback collection object.
+
+#### validations.isInstanceFromNoStateModel
+
+```js
+function isInstanceFromNoStateModel(instance: any): boolean
+```
+
+To validate if the parameter object is a uninitialized store instance.
+
+#### validations.isModelKey
+
+```js
+function isModelKey<
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: any
+  ): data is ModelKey<S, T, R>;
+```
+
+To validate if the parameter object is a model key.
+
+#### validations.isModelStore
+
+```js
+function isModelStore<
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: any
+  ): data is Store<S, T, R>;
+```
+
+To validate if the parameter object is a store.
+
+#### validations.isModelUsage
+
+```js
+function isModelUsage<
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: any
+  ): data is ModelUsage<S, T, R>;
+```
+
+To validate if the parameter object is a model usage. A model usage is created by API **model**, it is a tool collection provides **createKey**, **createStore**, **select** APIs based on the model.
+
+### shallowEqual
+
+```js
+function shallowEqual(prev: any, current: any): boolean
+```
+
+To validate if the value of left is shallow equal with the value of right.
 
 ## Browser Support 
 

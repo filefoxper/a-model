@@ -309,6 +309,13 @@ export declare const validations: {
   >(
     data: any
   ) => data is ModelUsage<S, T, R>;
+  isStoreIndex: <
+    S,
+    T extends ModelInstance,
+    R extends (ins: () => T) => any = (ins: () => T) => T
+  >(
+    data: any
+  ) => data is StoreIndex<S, T, R>;
 };
 
 /** tools * */

@@ -1,8 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const esbuild = require('esbuild');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const { es5Plugin } = require('esbuild-plugin-es5');
 
 function buildEsm() {
