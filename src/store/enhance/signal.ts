@@ -8,11 +8,11 @@ export function createSignal<
   R extends (instance: () => T) => any = (instance: () => T) => T
 >(store: Store<S, T, R>): SignalStore<S, T, R> {
   const signalStore: {
-    collection: null | Record<string, any>;
+    collection: Record<string, any>;
     started: boolean;
     enabled: boolean;
   } = {
-    collection: null,
+    collection: {},
     started: false,
     enabled: false
   };
@@ -24,7 +24,6 @@ export function createSignal<
       }
       const { collection } = signalStore;
       if (collection == null) {
-        dispatcher?.(action);
         return;
       }
       const storeInstance = extractInstance(store.updater);
@@ -62,7 +61,6 @@ export function createSignal<
         if (!signalStore.started) {
           return;
         }
-        signalStore.collection = signalStore.collection || {};
         signalStore.collection[key] = val;
       };
       const getInstance = function getInstance(options?: SignalOptions) {
@@ -77,9 +75,11 @@ export function createSignal<
       };
       signal.startStatistics = function startStatistics() {
         signalStore.started = true;
+        signalStore.collection = {};
       };
       signal.stopStatistics = function stopStatistics() {
         signalStore.started = false;
+        signalStore.collection = {};
       };
       signal.subscribe = function subscribe(dispatchCallback: Dispatch) {
         return store.subscribe(dispatchCallback);
