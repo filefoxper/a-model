@@ -79,7 +79,6 @@ export function createSignal<
       };
       signal.stopStatistics = function stopStatistics() {
         signalStore.started = false;
-        signalStore.collection = {};
       };
       signal.subscribe = function subscribe(dispatchCallback: Dispatch) {
         return store.subscribe(dispatchCallback);

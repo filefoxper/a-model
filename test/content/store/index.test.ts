@@ -265,7 +265,7 @@ describe('使用 createStore 创建状态库', () => {
       unsubscribe();
     });
 
-    test('当使用信号同步点的stopStatistics方法时，信号点停止对比实例字段，并随行为的产生通知到监听函数，可通过再次使用startStatistics方法进行恢复', () => {
+    test('当使用信号同步点的stopStatistics方法时，信号点停止对比实例字段，可通过再次使用startStatistics方法进行恢复', () => {
       const actions: string[] = [];
       const store = createStore(counter, 0);
       const { subscribe, getSignal } = createSignal(store);
@@ -281,9 +281,7 @@ describe('使用 createStore 创建状态库', () => {
       increase();
       signal.startStatistics();
       const { symbol: s } = signal();
-      decrease();
       signal.stopStatistics();
-      const { count: c1 } = signal();
       decrease();
       expect(actions.length).toBe(1);
       unsubscribe();
