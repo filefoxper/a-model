@@ -101,17 +101,26 @@ function wrapToField<S, T extends ModelInstance>(
   value: unknown,
   onGot?: (key: string, value: any) => any
 ) {
+  function collect(pName: string, v: unknown) {
+    if (onGot) {
+      onGot(pName, v);
+    }
+  }
   const { cacheFields } = updater;
   if (!cacheIdentify.field(value)) {
-    if (onGot) {
-      onGot(propertyName, value);
-    }
+    collect(propertyName, value);
     return value;
   }
   const field = value;
   const cachedField = cacheFields[propertyName];
-  if (cachedField) {
-    return cachedField.getter;
+  if (
+    cachedField &&
+    ((field.deps && shallowEqual(cachedField.deps, field.deps)) ||
+      (!field.deps && cachedField.value === field.value))
+  ) {
+    const cacheFieldGetter = cachedField.getter;
+    collect(propertyName, cacheFieldGetter);
+    return cacheFieldGetter;
   }
   const getter = {
     get() {
@@ -141,6 +150,7 @@ function wrapToField<S, T extends ModelInstance>(
     }
   };
   cacheFields[propertyName] = { getter, value: field.value, deps: field.deps };
+  collect(propertyName, getter);
   return getter;
 }
 
