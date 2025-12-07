@@ -1,12 +1,13 @@
 import { createUpdater } from '../updater';
 import { isModelKey, isModelUsage } from '../validation';
 import { modelKeyIdentifier, modelStoreIdentifier } from '../identifiers';
+import { noop } from '../tools';
 import {
   extractInstance,
   createField as createInstanceField,
   createMethod as createInstanceMethod
 } from './instance';
-import type { Key, ModelUsage, Store } from './type';
+import type { InstanceCache, Key, ModelUsage, Store } from './type';
 import type {
   Dispatch,
   Model,
@@ -27,10 +28,10 @@ export function createPrimaryKey<
   const ifModelKey = isModelKey<S, T, R>(modelFn);
   const ifModelUsage = isModelUsage<S, T, R>(modelFn);
   const model = ifModelKey ? modelFn.source : modelFn;
-  const selector =
-    config.selector ??
+  const wrapper =
+    config.wrapper ??
     (ifModelKey || ifModelUsage
-      ? modelFn.selector
+      ? modelFn.wrapper
       : function defaultSelector(i: () => T) {
           return i();
         });
@@ -38,7 +39,7 @@ export function createPrimaryKey<
     return model(state);
   };
   wrapModel.source = model;
-  wrapModel.selector = selector;
+  wrapModel.wrapper = wrapper;
   wrapModel.modelKeyIdentifier = modelKeyIdentifier;
   if ('state' in config) {
     wrapModel.defaultState = config.state;
@@ -86,20 +87,24 @@ export function createStore<
   };
   const updater = createUpdater(model, combinedMiddleWare, conf);
   const key = modelKey ?? createPrimaryKey<S, T, S, R>(model, config);
-  const getInstance = function getInstance(): T {
-    return extractInstance(updater);
+  const propertiesCache: InstanceCache<any> = {
+    target: updater.instance,
+    cacheFields: {},
+    cacheMethods: {}
   };
   const store: Store<S, T, R> = {
     key,
     getToken() {
       return updater.token;
     },
-    subscribe(dispatcher: Dispatch) {
-      const { connect, disconnect } = updater.createTunnel(dispatcher);
+    subscribe(dispatcher?: Dispatch) {
+      const { connect, disconnect } = updater.createTunnel(dispatcher || noop);
       connect();
       return disconnect;
     },
-    getInstance,
+    getInstance() {
+      return extractInstance<S, T, R>(updater, key.wrapper, propertiesCache);
+    },
     update(args?: {
       model?: Model<S, T>;
       key?: Key<S, T, R>;

@@ -1,5 +1,6 @@
-import { cacheIdentify, extractInstance } from '../instance';
-import type { SignalOptions, SignalStore, Store } from '../type';
+import { extractInstance } from '../instance';
+import { cacheIdentify } from '../cache';
+import type { InstanceCache, SignalOptions, SignalStore, Store } from '../type';
 import type { Action, Dispatch, ModelInstance } from '../../updater/type';
 
 export function createSignal<
@@ -16,6 +17,11 @@ export function createSignal<
     started: false,
     enabled: false
   };
+  const propertiesCache: InstanceCache<any> = {
+    target: store.getInstance(),
+    cacheFields: {},
+    cacheMethods: {}
+  };
   const enhance = (dispatcher?: Dispatch) => {
     return (action: Action) => {
       if (!signalStore.enabled) {
@@ -26,8 +32,13 @@ export function createSignal<
       if (collection == null) {
         return;
       }
-      const storeInstance = extractInstance(store.updater);
+      const storeInstance = extractInstance<S, T, R>(
+        store.updater,
+        store.key.wrapper,
+        propertiesCache
+      );
       const keys = Object.keys(collection);
+      console.log(collection);
       if (!keys.length) {
         return;
       }
@@ -65,9 +76,11 @@ export function createSignal<
       };
       const getInstance = function getInstance(options?: SignalOptions) {
         const { cutOff } = options ?? {};
-        return extractInstance(
+        return extractInstance<S, T, R>(
           store.updater,
-          cutOff ? undefined : collectUsedFields
+          store.key.wrapper,
+          propertiesCache,
+          { onGet: cutOff ? undefined : collectUsedFields }
         );
       };
       const signal = function signal(options?: SignalOptions) {

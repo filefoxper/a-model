@@ -61,7 +61,7 @@ export type MiddleWare = (
 export interface StateConfig<S, R extends (ins: any) => any = (ins: any) => any>
   extends Config {
   state?: S;
-  selector?: R;
+  wrapper?: R;
   middleWares?: MiddleWare[];
 }
 

@@ -40,7 +40,7 @@ export interface Key<
 > extends Model<S, T> {
   (s: S): ValidInstance<S, T>;
   source: Model<S, T>;
-  selector: R;
+  wrapper: R;
   modelKeyIdentifier: () => boolean;
   defaultState?: S;
   [k: string]: any;
@@ -62,10 +62,10 @@ export interface ModelUsage<
   (s: S): ValidInstance<S, T>;
   createKey: (state?: S) => ModelKey<S, T, R>;
   createStore: (state?: S) => Store<S, T, R>;
-  select: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+  wrap: <C extends (instance: () => T) => any = (instance: () => T) => T>(
     s: C
   ) => ModelUsage<S, T, C>;
-  selector: R;
+  wrapper: R;
   modelUsageIdentifier: () => boolean;
   extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
 }
@@ -75,9 +75,9 @@ export interface Store<
   T extends ModelInstance = any,
   R extends (instance: () => T) => any = (instance: () => T) => T
 > extends StoreIndex<S, T, R> {
-  subscribe: (dispatcher: Dispatch) => () => void;
+  subscribe: (dispatcher?: Dispatch) => () => void;
   updater: Updater<S, T>;
-  getInstance: () => T;
+  getInstance: () => ReturnType<R>;
   update: (args?: {
     model?: Model<S, T>;
     key?: Key<S, T, R>;

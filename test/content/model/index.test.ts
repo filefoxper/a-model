@@ -1,4 +1,4 @@
-import { config, createSelector } from '../../../src';
+import { config } from '../../../src';
 
 const { model } = config();
 
@@ -34,7 +34,7 @@ describe('model', () => {
 
   test('使用model API，可为创建的库添加默认实例重选组合方案', async () => {
     const store = model(counter)
-      .select(getInstance => {
+      .wrap(getInstance => {
         return {
           ...getInstance(),
           async delayIncrease() {
@@ -47,16 +47,16 @@ describe('model', () => {
         };
       })
       .createStore(0);
-    const { subscribe, select } = createSelector(store);
-    const unsubscribe = subscribe();
-    await select().delayIncrease();
-    expect(select().count).toBe(1);
+    const { subscribe, getInstance } = store;
+    const unsubscribe = subscribe(() => undefined);
+    await getInstance().delayIncrease();
+    expect(getInstance().count).toBe(1);
     unsubscribe();
   });
 
   test('使用model API，可为创建的键添加默认实例重选组合方案', async () => {
     const key = model(counter)
-      .select(getInstance => {
+      .wrap(getInstance => {
         return {
           ...getInstance(),
           async delayIncrease() {
@@ -70,10 +70,10 @@ describe('model', () => {
       })
       .createKey(0);
     const store = key.createStore();
-    const { subscribe, select } = createSelector(store);
+    const { subscribe, getInstance } = store;
     const unsubscribe = subscribe();
-    await select().delayIncrease();
-    expect(select().count).toBe(1);
+    await getInstance().delayIncrease();
+    expect(getInstance().count).toBe(1);
     unsubscribe();
   });
 });
@@ -143,7 +143,7 @@ describe('model.createField', () => {
 
   test('使用 model.createField 创建的字段，可运用于默认实例重选组合方案', () => {
     const store = model(counter)
-      .select(getInstance => {
+      .wrap(getInstance => {
         return {
           selectedInfo: model.createField(() => ({
             symbol: getInstance().symbol
@@ -152,17 +152,17 @@ describe('model.createField', () => {
         };
       })
       .createStore(0);
-    const { subscribe, select } = createSelector(store);
+    const { subscribe, getInstance } = store;
     const unsubscribe = subscribe();
-    select().decrease();
-    expect(select().selectedInfo.get().symbol).toBe('-');
+    getInstance().decrease();
+    expect(getInstance().selectedInfo.get().symbol).toBe('-');
     unsubscribe();
   });
 
   test('默认实例重选组合方案中的字段可以使用实例对象提供的属性数据作为缓存依赖', () => {
     const symbols: any[] = [];
     const store = model(counter)
-      .select(getInstance => {
+      .wrap(getInstance => {
         return {
           selectedInfo: model.createField(
             () => ({
@@ -174,13 +174,13 @@ describe('model.createField', () => {
         };
       })
       .createStore(0);
-    const { subscribe, select } = createSelector(store);
+    const { subscribe, getInstance } = store;
     const unsubscribe = subscribe();
-    symbols.push(select().selectedInfo.get());
-    select().decrease();
-    symbols.push(select().selectedInfo.get());
-    select().decrease();
-    symbols.push(select().selectedInfo.get());
+    symbols.push(getInstance().selectedInfo.get());
+    getInstance().decrease();
+    symbols.push(getInstance().selectedInfo.get());
+    getInstance().decrease();
+    symbols.push(getInstance().selectedInfo.get());
     expect(symbols[1]).toBe(symbols[2]);
     unsubscribe();
   });
@@ -188,7 +188,7 @@ describe('model.createField', () => {
   test('默认实例重选组合方案中的字段可以使用实例对象提供的字段作为缓存依赖', () => {
     const symbols: any[] = [];
     const store = model(counter)
-      .select(getInstance => {
+      .wrap(getInstance => {
         return {
           selectedInfo: model.createField(
             () => ({
@@ -200,13 +200,13 @@ describe('model.createField', () => {
         };
       })
       .createStore(0);
-    const { subscribe, select } = createSelector(store);
+    const { subscribe, getInstance } = store;
     const unsubscribe = subscribe();
-    symbols.push(select().selectedInfo.get());
-    select().decrease();
-    symbols.push(select().selectedInfo.get());
-    select().decrease();
-    symbols.push(select().selectedInfo.get());
+    symbols.push(getInstance().selectedInfo.get());
+    getInstance().decrease();
+    symbols.push(getInstance().selectedInfo.get());
+    getInstance().decrease();
+    symbols.push(getInstance().selectedInfo.get());
     expect(symbols[1]).toBe(symbols[2]);
     unsubscribe();
   });

@@ -9,16 +9,16 @@ export function configModel(config: Config) {
     S,
     T extends ModelInstance,
     R extends (instance: () => T) => any = (instance: () => T) => T
-  >(modelFn: Model<S, T>, selector?: R): ModelUsage<S, T, R> {
+  >(modelFn: Model<S, T>, wrapper?: R): ModelUsage<S, T, R> {
     const currentSelector =
-      selector ??
+      wrapper ??
       (function defaultSelector(i: () => T) {
         return i();
       } as R);
     const modelWrapper = function modelWrapper(state: S) {
       return modelFn(state);
     };
-    modelWrapper.select = function select<
+    modelWrapper.wrap = function wrap<
       C extends (instance: () => T) => any = (instance: () => T) => T
     >(s: C) {
       return model<S, T, C>(modelFn, s);
@@ -27,16 +27,16 @@ export function configModel(config: Config) {
       return createKey<S, T, R>(
         modelFn,
         arguments.length
-          ? { ...config, state, selector: currentSelector }
-          : { ...config, selector: currentSelector }
+          ? { ...config, state, wrapper: currentSelector }
+          : { ...config, wrapper: currentSelector }
       );
     };
     modelWrapper.createStore = function createModelStore(state?: S) {
       return createStore<S, T, R>(
         modelFn,
         arguments.length
-          ? { ...config, state, selector: currentSelector }
-          : { ...config, selector: currentSelector }
+          ? { ...config, state, wrapper: currentSelector }
+          : { ...config, wrapper: currentSelector }
       );
     };
     modelWrapper.extends = function extendsModelUsage<
@@ -44,7 +44,7 @@ export function configModel(config: Config) {
     >(e: E) {
       return Object.assign(modelWrapper, e);
     };
-    modelWrapper.selector = currentSelector;
+    modelWrapper.wrapper = currentSelector;
     modelWrapper.modelUsageIdentifier = modelUsageIdentifier;
     return modelWrapper;
   };

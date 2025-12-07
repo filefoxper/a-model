@@ -1,25 +1,7 @@
 import { createProxy, shallowEqual } from '../tools';
-import type { FieldStructure, MethodStructure } from './type';
+import { cacheIdentify, cacheProperties } from './cache';
+import type { FieldStructure, InstanceCache, MethodStructure } from './type';
 import type { Action, ModelInstance, Updater } from '../updater/type';
-
-export const cacheIdentify = {
-  field(d: unknown): d is FieldStructure {
-    if (!d) {
-      return false;
-    }
-    const f = d as { identifier: (d: unknown) => boolean };
-    return f.identifier === cacheIdentify.field;
-  },
-  method(d: unknown): d is MethodStructure {
-    if (typeof d !== 'function') {
-      return false;
-    }
-    const m = d as ((...args: any[]) => any) & {
-      identifier: (d: unknown) => boolean;
-    };
-    return m.identifier === cacheIdentify.method;
-  }
-};
 
 export function createField<R extends () => any>(
   callback: R,
@@ -154,22 +136,30 @@ function wrapToField<S, T extends ModelInstance>(
   return getter;
 }
 
-export function extractInstance<S, T extends ModelInstance>(
+export function extractInstance<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(
   updater: Updater<S, T>,
-  onGet?: (key: string, value: any) => any
-) {
-  const { instance } = updater;
-  if (typeof instance !== 'object' || !instance) {
-    throw new Error('The instance should be an object or array.');
-  }
-  const properties = Object.getOwnPropertyNames(instance);
+  wrapper: R,
+  cache: InstanceCache<T>,
+  opts?: { onGet?: (key: string, value: any) => any }
+): ReturnType<R> {
+  const { onGet } = opts || {};
   const handleGetter = function handleGetter(key: string, value: any) {
     if (!onGet) {
       return;
     }
     onGet(key, value);
   };
-  return createProxy(instance, {
+
+  const { instance } = updater;
+  if (typeof instance !== 'object' || !instance) {
+    throw new Error('The instance should be an object or array.');
+  }
+  const properties = Object.getOwnPropertyNames(instance);
+  const proxiedInstance = createProxy(instance, {
     get(target: T, p: string): any {
       const value = target[p];
       // 行为方法只代理非继承的自身方法
@@ -185,4 +175,13 @@ export function extractInstance<S, T extends ModelInstance>(
       return false;
     }
   });
+
+  function generateInstance() {
+    return proxiedInstance;
+  }
+  const wrapped = wrapper(generateInstance);
+  if (typeof wrapped === 'object' && wrapped != null) {
+    return cacheProperties({ ...cache, target: wrapped }, handleGetter)();
+  }
+  return wrapped;
 }
