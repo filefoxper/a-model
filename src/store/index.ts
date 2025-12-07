@@ -105,6 +105,9 @@ export function createStore<
     getInstance() {
       return extractInstance<S, T, R>(updater, key.wrapper, propertiesCache);
     },
+    getStoreInstance() {
+      return extractInstance<S, T, R>(updater, undefined, propertiesCache);
+    },
     update(args?: {
       model?: Model<S, T>;
       key?: Key<S, T, R>;

@@ -78,6 +78,7 @@ export interface Store<
   subscribe: (dispatcher?: Dispatch) => () => void;
   updater: Updater<S, T>;
   getInstance: () => ReturnType<R>;
+  getStoreInstance: () => T;
   update: (args?: {
     model?: Model<S, T>;
     key?: Key<S, T, R>;

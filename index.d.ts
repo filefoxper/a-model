@@ -100,6 +100,7 @@ export declare interface Store<
   subscribe: (dispatcher: Dispatch) => () => void;
   getToken: () => Token;
   getInstance: () => ReturnType<R>;
+  getStoreInstance: () => T;
   update: (args?: {
     model?: Model<S, T>;
     key?: Key<S, T, R>;
