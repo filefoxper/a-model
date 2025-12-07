@@ -142,10 +142,30 @@ export function extractInstance<
   R extends (ins: () => T) => any = (ins: () => T) => T
 >(
   updater: Updater<S, T>,
+  wrapper: undefined,
+  cache: InstanceCache<T>,
+  opts?: { onGet?: (key: string, value: any) => any }
+): T;
+export function extractInstance<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(
+  updater: Updater<S, T>,
   wrapper: R,
   cache: InstanceCache<T>,
   opts?: { onGet?: (key: string, value: any) => any }
-): ReturnType<R> {
+): ReturnType<R>;
+export function extractInstance<
+  S,
+  T extends ModelInstance,
+  R extends (ins: () => T) => any = (ins: () => T) => T
+>(
+  updater: Updater<S, T>,
+  wrapper: R | undefined,
+  cache: InstanceCache<T>,
+  opts?: { onGet?: (key: string, value: any) => any }
+): ReturnType<R> | T {
   const { onGet } = opts || {};
   const handleGetter = function handleGetter(key: string, value: any) {
     if (!onGet) {
@@ -176,6 +196,9 @@ export function extractInstance<
   });
 
   function generateInstance() {
+    return proxiedInstance;
+  }
+  if (wrapper == null) {
     return proxiedInstance;
   }
   const wrapped = wrapper(generateInstance);
