@@ -99,7 +99,7 @@ export declare interface Store<
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getToken: () => Token;
-  getInstance: () => T;
+  getInstance: () => ReturnType<R>;
   update: (args?: {
     model?: Model<S, T>;
     key?: Key<S, T, R>;
@@ -172,10 +172,10 @@ export declare interface ModelUsage<
   (s: S): ValidInstance<S, T>;
   createKey: <D extends S>(state?: D) => ModelKey<S, T, R>;
   createStore: <D extends S>(state?: D) => Store<S, T, R>;
-  select: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+  pipe: <C extends (instance: () => T) => any = (instance: () => T) => T>(
     s: C
   ) => ModelUsage<S, T, C>;
-  selector: R;
+  wrapper: R;
   extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
 }
 
@@ -213,7 +213,7 @@ declare interface SignalStore<
   getToken: () => Token;
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
-    (options?: SignalOptions): T;
+    (options?: SignalOptions): ReturnType<R>;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
@@ -224,14 +224,14 @@ declare interface SignalStore<
 export declare function createSignal<
   S,
   T extends ModelInstance,
-  R extends (instance: () => T) => any = (instance: () => T) => any
+  R extends (instance: () => T) => any = (instance: () => T) => T
 >(store: Store<S, T, R>): SignalStore<S, T, R>;
 
 /** createSelector * */
 
 declare type SelectMethod<
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => any
+  R extends (instance: () => T) => any = (instance: () => T) => T
 > = {
   (): ReturnType<R>;
   <C extends (instance: () => T) => any>(selector: C): ReturnType<C>;
@@ -244,7 +244,7 @@ declare type SelectMethod<
 declare interface SelectorStore<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => any
+  R extends (instance: () => T) => any = (instance: () => T) => T
 > extends StoreIndex<S, T, R> {
   getToken: () => Token;
   subscribe: (dispatcher: Dispatch) => () => void;
@@ -258,7 +258,7 @@ declare interface SelectorOption<T = any> {
 export declare function createSelector<
   S,
   T extends ModelInstance,
-  R extends (instance: () => T) => any = (instance: () => T) => any
+  R extends (instance: () => T) => any = (instance: () => T) => T
 >(store: Store<S, T, R>, opts?: SelectorOption): SelectorStore<S, T, R>;
 
 /** config * */
