@@ -166,10 +166,9 @@ export function extractInstance<
       if (typeof value === 'function' && properties.indexOf(p) >= 0) {
         const actionMethod = wrapToActionMethod(updater, p);
         Object.assign(actionMethod, value);
-        handleGetter(p, actionMethod);
         return actionMethod;
       }
-      return wrapToField(updater, p, value, handleGetter);
+      return wrapToField(updater, p, value);
     },
     set(): boolean {
       return false;

@@ -291,7 +291,7 @@ describe('使用 createStore 创建状态库', () => {
   describe('使用 createSelector 方法可创建一个实例重选同步点', () => {
     test('当实例重选同步点的 select 方法没有使用自定义 selector 函数作参数时，默认使用通过 model API 设置的 selector 函数', async () => {
       const store = model(counter)
-        .wrap(getInstance => {
+        .pipe(getInstance => {
           const instance = getInstance();
           return {
             ...instance,
@@ -344,7 +344,7 @@ describe('使用 createStore 创建状态库', () => {
 
     test('当实例重选同步点的 select 方法使用了自定义的 equality 函数时，返回结果是否更新由 equality 对比值是否相等决定', async () => {
       const store = model(counter)
-        .wrap(getInstance => {
+        .pipe(getInstance => {
           const instance = getInstance();
           return {
             ...instance,

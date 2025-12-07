@@ -62,7 +62,7 @@ export interface ModelUsage<
   (s: S): ValidInstance<S, T>;
   createKey: (state?: S) => ModelKey<S, T, R>;
   createStore: (state?: S) => Store<S, T, R>;
-  wrap: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+  pipe: <C extends (instance: () => T) => any = (instance: () => T) => T>(
     s: C
   ) => ModelUsage<S, T, C>;
   wrapper: R;

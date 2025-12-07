@@ -38,7 +38,6 @@ export function createSignal<
         propertiesCache
       );
       const keys = Object.keys(collection);
-      console.log(collection);
       if (!keys.length) {
         return;
       }
