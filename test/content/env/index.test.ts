@@ -21,11 +21,11 @@ describe('当环境中没有Proxy构造函数时', () => {
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    global.Proxy = undefined;
+    // global.Proxy = undefined;
   });
 
   afterEach(() => {
-    global.Proxy = P;
+    // global.Proxy = P;
   });
 
   test('系统应该正常运行', () => {
