@@ -34,7 +34,7 @@ describe('model', () => {
 
   test('使用model API，可为创建的库添加默认实例重选组合方案', async () => {
     const store = model(counter)
-      .pipe(getInstance => {
+      .produce(getInstance => {
         return {
           ...getInstance(),
           async delayIncrease() {
@@ -56,7 +56,7 @@ describe('model', () => {
 
   test('使用model API，可为创建的键添加默认实例重选组合方案', async () => {
     const key = model(counter)
-      .pipe(getInstance => {
+      .produce(getInstance => {
         return {
           ...getInstance(),
           async delayIncrease() {
@@ -143,7 +143,7 @@ describe('model.createField', () => {
 
   test('使用 model.createField 创建的字段，可运用于默认实例重选组合方案', () => {
     const store = model(counter)
-      .pipe(getInstance => {
+      .produce(getInstance => {
         return {
           selectedInfo: model.createField(() => ({
             symbol: getInstance().symbol
@@ -162,7 +162,7 @@ describe('model.createField', () => {
   test('默认实例重选组合方案中的字段可以使用实例对象提供的属性数据作为缓存依赖', () => {
     const symbols: any[] = [];
     const store = model(counter)
-      .pipe(getInstance => {
+      .produce(getInstance => {
         return {
           selectedInfo: model.createField(
             () => ({
@@ -188,7 +188,7 @@ describe('model.createField', () => {
   test('默认实例重选组合方案中的字段可以使用实例对象提供的字段作为缓存依赖', () => {
     const symbols: any[] = [];
     const store = model(counter)
-      .pipe(getInstance => {
+      .produce(getInstance => {
         return {
           selectedInfo: model.createField(
             () => ({
