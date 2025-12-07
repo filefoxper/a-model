@@ -13,12 +13,14 @@ export function createSelector<
     selectedInstance: store.getInstance()
   };
   const cache: {
-    selector?: (instance: () => T) => any;
+    selector?: (instance: () => ReturnType<R>) => any;
     equality?: (c: any, n: any) => boolean;
-    setSelect: (selector: ((instance: () => T) => any) | undefined) => void;
+    setSelect: (
+      selector: ((instance: () => ReturnType<R>) => any) | undefined
+    ) => void;
   } = {
     equality,
-    setSelect(selector: ((instance: () => T) => any) | undefined) {
+    setSelect(selector: ((instance: () => ReturnType<R>) => any) | undefined) {
       cache.selector = selector;
       if (!selector) {
         return;
@@ -36,7 +38,7 @@ export function createSelector<
   };
 
   const generateSelectedInstance = function generateSelectedInstance(
-    getInstance: () => T
+    getInstance: () => ReturnType<R>
   ): any {
     if (cache.selector) {
       return cache.selector(getInstance);
@@ -66,10 +68,10 @@ export function createSelector<
   };
 
   function select(): ReturnType<R>;
-  function select<C extends (instance: () => T) => any>(
+  function select<C extends (instance: () => ReturnType<R>) => any>(
     selector: C
   ): ReturnType<C>;
-  function select<C extends (instance: () => T) => any>(
+  function select<C extends (instance: () => ReturnType<R>) => any>(
     selector?: C
   ): ReturnType<R> | ReturnType<C> {
     cache.setSelect(selector);

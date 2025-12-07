@@ -234,8 +234,10 @@ declare type SelectMethod<
   R extends (instance: () => T) => any = (instance: () => T) => T
 > = {
   (): ReturnType<R>;
-  <C extends (instance: () => T) => any>(selector: C): ReturnType<C>;
-  <C extends (instance: () => T) => any>(
+  <C extends (instance: () => ReturnType<R>) => any>(
+    selector: C
+  ): ReturnType<C>;
+  <C extends (instance: () => ReturnType<R>) => any>(
     selector?: C
   ): ReturnType<R> | ReturnType<C>;
 };
