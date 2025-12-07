@@ -18,7 +18,7 @@ export function configModel(config: Config) {
     const modelWrapper = function modelWrapper(state: S) {
       return modelFn(state);
     };
-    modelWrapper.pipe = function pipe<
+    modelWrapper.produce = function produce<
       C extends (instance: () => T) => any = (instance: () => T) => T
     >(s: C) {
       return model<S, T, C>(modelFn, s);
