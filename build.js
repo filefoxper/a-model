@@ -21,6 +21,7 @@ function buildMain() {
   return esbuild.build({
     entryPoints: ['src/index.ts'],
     bundle: true,
+    format: "cjs",
     plugins: [es5Plugin()],
     supported: { destructuring: true },
     target: ['chrome58', 'edge16', 'firefox57', 'node12', 'safari11'],
