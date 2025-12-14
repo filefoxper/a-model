@@ -1,4 +1,5 @@
 import { createProxy, shallowEqual } from '../tools';
+import { defaultSelector } from '../defaults';
 import { cacheIdentify, cacheProperties } from './cache';
 import type { FieldStructure, InstanceCache, MethodStructure } from './type';
 import type { Action, ModelInstance, Updater } from '../updater/type';
@@ -174,32 +175,39 @@ export function extractInstance<
     onGet(key, value);
   };
 
-  const { instance } = updater;
-  if (typeof instance !== 'object' || !instance) {
-    throw new Error('The instance should be an object or array.');
-  }
-  const properties = Object.getOwnPropertyNames(instance);
-  const proxiedInstance = createProxy(instance, {
-    get(target: T, p: string): any {
-      const value = target[p];
-      // 行为方法只代理非继承的自身方法
-      if (typeof value === 'function' && properties.indexOf(p) >= 0) {
-        const actionMethod = wrapToActionMethod(updater, p);
-        Object.assign(actionMethod, value);
-        return actionMethod;
-      }
-      return wrapToField(updater, p, value);
-    },
-    set(): boolean {
-      return false;
-    }
-  });
-
   function generateInstance() {
+    const { instance } = updater;
+    if (typeof instance !== 'object' || !instance) {
+      throw new Error('The instance should be an object or array.');
+    }
+    const properties = Object.getOwnPropertyNames(instance);
+    return createProxy(instance, {
+      get(target: T, p: string): any {
+        const value = target[p];
+        // 行为方法只代理非继承的自身方法
+        if (typeof value === 'function' && properties.indexOf(p) >= 0) {
+          const actionMethod = wrapToActionMethod(updater, p);
+          Object.assign(actionMethod, value);
+          return actionMethod;
+        }
+        return wrapToField(updater, p, value);
+      },
+      set(): boolean {
+        return false;
+      }
+    });
+  }
+
+  const proxiedInstance = generateInstance();
+
+  if (wrapper == null || wrapper === defaultSelector) {
     return proxiedInstance;
   }
-  if (wrapper == null) {
-    return proxiedInstance;
+  if (wrapper === defaultSelector) {
+    return cacheProperties(
+      { ...cache, target: proxiedInstance },
+      handleGetter
+    )();
   }
   const wrapped = wrapper(generateInstance);
   if (typeof wrapped === 'object' && wrapped != null) {

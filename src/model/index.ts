@@ -1,6 +1,7 @@
 import { createStore, createField, createMethod } from '../store';
 import { createKey } from '../key';
 import { modelUsageIdentifier } from '../identifiers';
+import { defaultSelector } from '../defaults';
 import type { ModelUsage } from '../store/type';
 import type { Config, Model, ModelInstance } from '../updater/type';
 
@@ -10,11 +11,7 @@ export function configModel(config: Config) {
     T extends ModelInstance,
     R extends (instance: () => T) => any = (instance: () => T) => T
   >(modelFn: Model<S, T>, wrapper?: R): ModelUsage<S, T, R> {
-    const currentSelector =
-      wrapper ??
-      (function defaultSelector(i: () => T) {
-        return i();
-      } as R);
+    const currentSelector = wrapper ?? (defaultSelector as R);
     const modelWrapper = function modelWrapper(state: S) {
       return modelFn(state);
     };

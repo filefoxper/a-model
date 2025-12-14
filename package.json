@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "as-model",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "This is a model state management tool",
   "license": "MIT",
   "author": "Jimmy.Harding",
