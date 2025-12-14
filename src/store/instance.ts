@@ -1,5 +1,6 @@
 import { createProxy, shallowEqual } from '../tools';
 import { defaultSelector } from '../defaults';
+import { modelFieldIdentifier } from '../identifiers';
 import { cacheIdentify, cacheProperties } from './cache';
 import type { FieldStructure, InstanceCache, MethodStructure } from './type';
 import type { Action, ModelInstance, Updater } from '../updater/type';
@@ -106,6 +107,7 @@ function wrapToField<S, T extends ModelInstance>(
     return cacheFieldGetter;
   }
   const getter = {
+    identifier: modelFieldIdentifier,
     get() {
       const currentField = updater.instance[propertyName];
       if (!cacheIdentify.field(currentField)) {
