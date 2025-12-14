@@ -13,3 +13,7 @@ export function modelStoreIdentifier() {
 export function tokenIdentifier() {
   return true;
 }
+
+export function modelFieldIdentifier() {
+  return true;
+}
