@@ -202,7 +202,7 @@ export function extractInstance<
 
   const proxiedInstance = generateInstance();
 
-  if (wrapper == null || wrapper === defaultSelector) {
+  if (wrapper == null) {
     return proxiedInstance;
   }
   if (wrapper === defaultSelector) {
