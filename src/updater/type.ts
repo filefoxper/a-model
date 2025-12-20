@@ -67,6 +67,7 @@ export interface StateConfig<S, R extends (ins: any) => any = (ins: any) => any>
 
 export interface Token {
   isDifferent: (token: Token) => boolean;
+  tokenIdentifier: () => boolean;
   value: unknown;
 }
 
