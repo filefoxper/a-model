@@ -1,4 +1,5 @@
 import { isToken } from '../validation';
+import { tokenIdentifier } from '../identifiers';
 import type { Token } from './type';
 
 export function createToken(): Token {
@@ -10,6 +11,7 @@ export function createToken(): Token {
       }
       return token.value !== value;
     },
+    tokenIdentifier,
     value
   };
 }
