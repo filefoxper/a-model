@@ -1,7 +1,9 @@
 import type {
   Dispatch,
+  Instance,
   Model,
   ModelInstance,
+  PickState,
   Token,
   Updater,
   ValidInstance
@@ -55,19 +57,23 @@ export interface StoreIndex<
 }
 
 export type ModelUsage<
-  S,
-  T extends ModelInstance,
-  M extends Model<S, T>,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  M extends Model,
+  R extends (instance: () => Instance<M>) => any = (
+    instance: () => Instance<M>
+  ) => Instance<M>
 > = M & {
-  createKey: (state?: S) => ModelKey<S, T, R>;
-  createStore: (state?: S) => Store<S, T, R>;
-  produce: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+  createKey: (state?: PickState<M>) => ModelKey<PickState<M>, Instance<M>, R>;
+  createStore: (state?: PickState<M>) => Store<PickState<M>, Instance<M>, R>;
+  produce: <
+    C extends (instance: () => Instance<M>) => any = (
+      instance: () => Instance<M>
+    ) => Instance<M>
+  >(
     s: C
-  ) => ModelUsage<S, T, M, C>;
+  ) => ModelUsage<M, C>;
   wrapper: R;
   modelUsageIdentifier: () => boolean;
-  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, M, R> & E;
+  extends: <E extends Record<string, any>>(e: E) => ModelUsage<M, R> & E;
 };
 
 export interface Store<

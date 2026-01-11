@@ -12,7 +12,7 @@ export function config(configuration: Config = {}) {
     D extends S,
     R extends (instance: () => T) => any = (instance: () => T) => T
   >(
-    modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, Model<S, T>, R>,
+    modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
     state?: D
   ): Store<S, T, R> {
     return cs<S, T, R>(
@@ -27,7 +27,7 @@ export function config(configuration: Config = {}) {
     D extends S,
     R extends (instance: () => T) => any = (instance: () => T) => T
   >(
-    model: Model<S, T> | ModelUsage<S, T, Model<S, T>, R>,
+    model: Model<S, T> | ModelUsage<Model<S, T>, R>,
     state?: D
   ): ModelKey<S, T, R> {
     const isKeySetState = arguments.length > 1;
