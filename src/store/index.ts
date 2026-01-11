@@ -22,7 +22,7 @@ export function createPrimaryKey<
   D extends S,
   R extends (ins: () => T) => any = (ins: () => T) => T
 >(
-  modelFn: Model<S, T> | Key<S, T> | ModelUsage<S, T, R>,
+  modelFn: Model<S, T> | Key<S, T> | ModelUsage<S, T, Model<S, T>, R>,
   config: StateConfig<D, R> = {}
 ): Key<S, T, R> {
   const ifModelKey = isModelKey<S, T, R>(modelFn);
@@ -52,11 +52,11 @@ export function createStore<
   T extends ModelInstance,
   R extends (ins: () => T) => any = (ins: () => T) => T
 >(
-  modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
+  modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, Model<S, T>, R>,
   config: StateConfig<S, R> = {}
 ): Store<S, T, R> {
   const ifModelKey = isModelKey<S, T, R>(modelLike);
-  const model: Model<S, T> | ModelUsage<S, T, R> = ifModelKey
+  const model: Model<S, T> | ModelUsage<S, T, Model<S, T>, R> = ifModelKey
     ? modelLike.source
     : modelLike;
   const modelKey = ifModelKey ? modelLike : undefined;

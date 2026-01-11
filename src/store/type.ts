@@ -54,21 +54,21 @@ export interface StoreIndex<
   key: Key<S, T, R>;
 }
 
-export interface ModelUsage<
+export type ModelUsage<
   S,
   T extends ModelInstance,
+  M extends Model<S, T>,
   R extends (instance: () => T) => any = (instance: () => T) => T
-> {
-  (s: S): ValidInstance<S, T>;
+> = M & {
   createKey: (state?: S) => ModelKey<S, T, R>;
   createStore: (state?: S) => Store<S, T, R>;
   produce: <C extends (instance: () => T) => any = (instance: () => T) => T>(
     s: C
-  ) => ModelUsage<S, T, C>;
+  ) => ModelUsage<S, T, M, C>;
   wrapper: R;
   modelUsageIdentifier: () => boolean;
-  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
-}
+  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, M, R> & E;
+};
 
 export interface Store<
   S = any,

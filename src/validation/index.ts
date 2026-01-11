@@ -4,7 +4,7 @@ import {
   modelUsageIdentifier,
   tokenIdentifier
 } from '../identifiers';
-import type { ModelInstance, Token } from '../updater/type';
+import type { Model, ModelInstance, Token } from '../updater/type';
 import type { ModelKey } from '../key/type';
 import type { ModelUsage, Store, StoreIndex } from '../store/type';
 
@@ -47,7 +47,7 @@ export function isModelUsage<
   S,
   T extends ModelInstance,
   R extends (ins: () => T) => any = (ins: () => T) => T
->(data: unknown): data is ModelUsage<S, T, R> {
+>(data: unknown): data is ModelUsage<S, T, Model<S, T>, R> {
   if (!data) {
     return false;
   }
