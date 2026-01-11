@@ -121,7 +121,7 @@ export declare function createStore<
   D extends S,
   R extends (instance: () => T) => any = (instance: () => T) => T
 >(
-  model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
+  model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, Model<S, T>, R>,
   state?: D
 ): Store<S, T, R>;
 
@@ -142,7 +142,10 @@ export declare function createKey<
   T extends ModelInstance,
   D extends S,
   R extends (instance: () => T) => any = (instance: () => T) => T
->(model: Model<S, T> | ModelUsage<S, T, R>, state?: D): ModelKey<S, T, R>;
+>(
+  model: Model<S, T> | ModelUsage<S, T, Model<S, T>, R>,
+  state?: D
+): ModelKey<S, T, R>;
 
 /** createStores * */
 
@@ -165,20 +168,20 @@ export declare function createStores(
 
 /** model API * */
 
-export declare interface ModelUsage<
+export declare type ModelUsage<
   S,
   T extends ModelInstance,
+  M extends Model<S, T>,
   R extends (instance: () => T) => any = (instance: () => T) => T
-> {
-  (s: S): ValidInstance<S, T>;
+> = M & {
   createKey: <D extends S>(state?: D) => ModelKey<S, T, R>;
   createStore: <D extends S>(state?: D) => Store<S, T, R>;
   produce: <C extends (instance: () => T) => any = (instance: () => T) => T>(
     s: C
-  ) => ModelUsage<S, T, C>;
+  ) => ModelUsage<S, T, M, C>;
   wrapper: R;
-  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, R> & E;
-}
+  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, M, R> & E;
+};
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export declare interface model {
@@ -189,7 +192,7 @@ export declare interface model {
   >(
     modelFn: Model<S, T>,
     s?: R
-  ): ModelUsage<S, T, R>;
+  ): ModelUsage<S, T, typeof modelFn, R>;
   createField: <P extends () => any>(
     callback: P,
     deps?: any[]
@@ -311,7 +314,7 @@ export declare const validations: {
     R extends (ins: () => T) => any = (ins: () => T) => T
   >(
     data: any
-  ) => data is ModelUsage<S, T, R>;
+  ) => data is ModelUsage<S, T, typeof data, R>;
   isStoreIndex: <
     S,
     T extends ModelInstance,

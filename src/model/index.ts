@@ -10,7 +10,7 @@ export function configModel(config: Config) {
     S,
     T extends ModelInstance,
     R extends (instance: () => T) => any = (instance: () => T) => T
-  >(modelFn: Model<S, T>, wrapper?: R): ModelUsage<S, T, R> {
+  >(modelFn: Model<S, T>, wrapper?: R): ModelUsage<S, T, Model<S, T>, R> {
     const currentSelector = wrapper ?? (defaultSelector as R);
     const modelWrapper = function modelWrapper(state: S) {
       return modelFn(state);
