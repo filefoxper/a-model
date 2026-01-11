@@ -11,9 +11,17 @@ export type ValidInstance<S, T extends ModelInstance> = {
       : T[K];
 };
 
-export type Model<S, T extends ModelInstance> = (
+export type Model<S = any, T extends ModelInstance = ModelInstance> = (
   state: S
 ) => ValidInstance<S, T>;
+
+export type PickState<R extends Model> = R extends (state: infer S) => any
+  ? S
+  : never;
+
+export type Instance<R extends Model> = R extends (state: any) => infer T
+  ? T
+  : never;
 
 export type Action<S = any, T extends ModelInstance = ModelInstance> = {
   type: null | string;

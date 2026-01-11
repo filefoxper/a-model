@@ -14,7 +14,7 @@ export function createKey<
   T extends ModelInstance,
   R extends (ins: () => T) => any = (ins: () => T) => T
 >(
-  model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, Model<S, T>, R>,
+  model: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
   config: StateConfig<S, R> = {}
 ): ModelKey<S, T, R> {
   const wrapModel = createPrimaryKey(model, config);

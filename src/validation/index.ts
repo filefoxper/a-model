@@ -47,7 +47,7 @@ export function isModelUsage<
   S,
   T extends ModelInstance,
   R extends (ins: () => T) => any = (ins: () => T) => T
->(data: unknown): data is ModelUsage<S, T, Model<S, T>, R> {
+>(data: unknown): data is ModelUsage<Model<S, T>, R> {
   if (!data) {
     return false;
   }

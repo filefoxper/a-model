@@ -27,9 +27,17 @@ declare type ValidInstance<S, T extends ModelInstance> = {
       : T[K];
 };
 
-export declare type Model<S, T extends ModelInstance> = (
+export declare type Model<S = any, T extends ModelInstance = ModelInstance> = (
   state: S
 ) => ValidInstance<S, T>;
+
+export type PickState<R extends Model> = R extends (state: infer S) => any
+  ? S
+  : never;
+
+export type Instance<R extends Model> = R extends (state: any) => infer T
+  ? T
+  : never;
 
 export declare type Action<S = any, T extends ModelInstance = ModelInstance> = {
   type: null | string;
@@ -121,7 +129,7 @@ export declare function createStore<
   D extends S,
   R extends (instance: () => T) => any = (instance: () => T) => T
 >(
-  model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, Model<S, T>, R>,
+  model: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
   state?: D
 ): Store<S, T, R>;
 
@@ -143,7 +151,7 @@ export declare function createKey<
   D extends S,
   R extends (instance: () => T) => any = (instance: () => T) => T
 >(
-  model: Model<S, T> | ModelUsage<S, T, Model<S, T>, R>,
+  model: Model<S, T> | ModelUsage<Model<S, T>, R>,
   state?: D
 ): ModelKey<S, T, R>;
 
@@ -169,30 +177,39 @@ export declare function createStores(
 /** model API * */
 
 export declare type ModelUsage<
-  S,
-  T extends ModelInstance,
-  M extends Model<S, T>,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  M extends Model,
+  R extends (instance: () => Instance<M>) => any = (
+    instance: () => Instance<M>
+  ) => Instance<M>
 > = M & {
-  createKey: <D extends S>(state?: D) => ModelKey<S, T, R>;
-  createStore: <D extends S>(state?: D) => Store<S, T, R>;
-  produce: <C extends (instance: () => T) => any = (instance: () => T) => T>(
+  createKey: <D extends PickState<M>>(
+    state?: D
+  ) => ModelKey<PickState<M>, Instance<M>, R>;
+  createStore: <D extends PickState<M>>(
+    state?: D
+  ) => Store<PickState<M>, Instance<M>, R>;
+  produce: <
+    C extends (instance: () => Instance<M>) => any = (
+      instance: () => Instance<M>
+    ) => Instance<M>
+  >(
     s: C
-  ) => ModelUsage<S, T, M, C>;
+  ) => ModelUsage<M, C>;
   wrapper: R;
-  extends: <E extends Record<string, any>>(e: E) => ModelUsage<S, T, M, R> & E;
+  extends: <E extends Record<string, any>>(e: E) => ModelUsage<M, R> & E;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export declare interface model {
   <
-    S,
-    T extends ModelInstance,
-    R extends (instance: () => T) => any = (instance: () => T) => T
+    M extends Model,
+    R extends (instance: () => Instance<M>) => any = (
+      instance: () => Instance<M>
+    ) => Instance<M>
   >(
-    modelFn: Model<S, T>,
+    modelFn: M,
     s?: R
-  ): ModelUsage<S, T, typeof modelFn, R>;
+  ): ModelUsage<M, R>;
   createField: <P extends () => any>(
     callback: P,
     deps?: any[]
@@ -275,7 +292,7 @@ export declare function config(configuration: Config): {
     D extends S,
     R extends (instance: () => T) => any = (instance: () => T) => T
   >(
-    model: Model<S, T> | Key<S, T, R> | ModelUsage<S, T, R>,
+    model: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
     state?: D
   ) => Store<S, T, R>;
   createKey: <
@@ -284,7 +301,7 @@ export declare function config(configuration: Config): {
     D extends S,
     R extends (instance: () => T) => any = (instance: () => T) => T
   >(
-    model: Model<S, T> | ModelUsage<S, T, R>,
+    model: Model<S, T> | ModelUsage<Model<S, T>, R>,
     state?: D
   ) => ModelKey<S, T, R>;
   createStores: (...modelKeys: (ModelKey | StoreIndex)[]) => StoreCollection;
@@ -314,7 +331,7 @@ export declare const validations: {
     R extends (ins: () => T) => any = (ins: () => T) => T
   >(
     data: any
-  ) => data is ModelUsage<S, T, typeof data, R>;
+  ) => data is ModelUsage<typeof data, R>;
   isStoreIndex: <
     S,
     T extends ModelInstance,
