@@ -66,8 +66,10 @@ export type MiddleWare = (
   store: UpdaterStore
 ) => (next: Dispatch) => (action: Action) => void;
 
-export interface StateConfig<S, R extends (ins: any) => any = (ins: any) => any>
-  extends Config {
+export interface StateConfig<
+  S,
+  R extends undefined | ((ins: any) => any) = undefined
+> extends Config {
   state?: S;
   wrapper?: R;
   middleWares?: MiddleWare[];

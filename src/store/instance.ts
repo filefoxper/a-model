@@ -142,33 +142,13 @@ function wrapToField<S, T extends ModelInstance>(
 export function extractInstance<
   S,
   T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
->(
-  updater: Updater<S, T>,
-  wrapper: undefined,
-  cache: InstanceCache<T>,
-  opts?: { onGet?: (key: string, value: any) => any }
-): T;
-export function extractInstance<
-  S,
-  T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
+  R extends undefined | ((ins: () => T) => any) = undefined
 >(
   updater: Updater<S, T>,
   wrapper: R,
   cache: InstanceCache<T>,
   opts?: { onGet?: (key: string, value: any) => any }
-): ReturnType<R>;
-export function extractInstance<
-  S,
-  T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
->(
-  updater: Updater<S, T>,
-  wrapper: R | undefined,
-  cache: InstanceCache<T>,
-  opts?: { onGet?: (key: string, value: any) => any }
-): ReturnType<R> | T {
+): R extends undefined ? T : ReturnType<R extends undefined ? never : R> {
   const { onGet } = opts || {};
   const handleGetter = function handleGetter(key: string, value: any) {
     if (!onGet) {
@@ -203,13 +183,13 @@ export function extractInstance<
   const proxiedInstance = generateInstance();
 
   if (wrapper == null) {
-    return proxiedInstance;
+    return proxiedInstance as R extends undefined ? T : never;
   }
   if (wrapper === defaultSelector) {
     return cacheProperties(
       { ...cache, target: proxiedInstance },
       handleGetter
-    )();
+    )() as R extends undefined ? T : never;
   }
   const wrapped = wrapper(generateInstance);
   if (typeof wrapped === 'object' && wrapped != null) {

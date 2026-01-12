@@ -20,7 +20,7 @@ export function createPrimaryKey<
   S,
   T extends ModelInstance,
   D extends S,
-  R extends (ins: () => T) => any = (ins: () => T) => T
+  R extends undefined | ((ins: () => T) => any) = undefined
 >(
   modelFn: Model<S, T> | Key<S, T> | ModelUsage<Model<S, T>, R>,
   config: StateConfig<D, R> = {}
@@ -50,7 +50,7 @@ export function createPrimaryKey<
 export function createStore<
   S,
   T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
+  R extends undefined | ((ins: () => T) => any) = undefined
 >(
   modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
   config: StateConfig<S, R> = {}
@@ -106,7 +106,7 @@ export function createStore<
       return extractInstance<S, T, R>(updater, key.wrapper, propertiesCache);
     },
     getStoreInstance() {
-      return extractInstance<S, T, R>(updater, undefined, propertiesCache);
+      return extractInstance<S, T>(updater, undefined, propertiesCache);
     },
     update(args?: {
       model?: Model<S, T>;

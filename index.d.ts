@@ -107,7 +107,9 @@ export declare interface Store<
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getToken: () => Token;
-  getInstance: () => R extends undefined ? T : ReturnType<R>;
+  getInstance: () => R extends undefined
+    ? T
+    : ReturnType<R extends undefined ? never : R>;
   getStoreInstance: () => T;
   update: (args?: {
     model?: Model<S, T>;
@@ -165,13 +167,15 @@ export declare interface StoreCollection {
   >(
     key: Key<S, T, R> | StoreIndex<S, T, R>
   ) => Store<S, T, R> | null;
-  update: (...keys: (ModelKey | StoreIndex)[]) => void;
+  update: (
+    ...keys: (ModelKey<any, any, any> | StoreIndex<any, any, any>)[]
+  ) => void;
   keys: () => Key[];
   destroy: () => void;
 }
 
 export declare function createStores(
-  ...modelKeys: (ModelKey | StoreIndex)[]
+  ...modelKeys: (ModelKey<any, any, any> | StoreIndex<any, any, any>)[]
 ): StoreCollection;
 
 /** model API * */
@@ -235,7 +239,9 @@ declare interface SignalStore<
   getToken: () => Token;
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {
-    (options?: SignalOptions): R extends undefined ? T : ReturnType<R>;
+    (
+      options?: SignalOptions
+    ): R extends undefined ? T : ReturnType<R extends undefined ? never : R>;
     startStatistics: () => void;
     stopStatistics: () => void;
     subscribe: (dispatcher: Dispatch) => () => void;
@@ -255,13 +261,27 @@ declare type SelectMethod<
   T extends ModelInstance = any,
   R extends undefined | ((instance: () => T) => any) = undefined
 > = {
-  (): R extends undefined ? T : ReturnType<R>;
-  <C extends (instance: () => R extends undefined ? T : ReturnType<R>) => any>(
+  (): R extends undefined ? T : ReturnType<R extends undefined ? never : R>;
+  <
+    C extends (
+      instance: () => R extends undefined
+        ? T
+        : ReturnType<R extends undefined ? never : R>
+    ) => any
+  >(
     selector: C
   ): ReturnType<C>;
-  <C extends (instance: () => R extends undefined ? T : ReturnType<R>) => any>(
+  <
+    C extends (
+      instance: () => R extends undefined
+        ? T
+        : ReturnType<R extends undefined ? never : R>
+    ) => any
+  >(
     selector?: C
-  ): ReturnType<R> | ReturnType<C>;
+  ):
+    | (R extends undefined ? T : ReturnType<R extends undefined ? never : R>)
+    | ReturnType<C>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare

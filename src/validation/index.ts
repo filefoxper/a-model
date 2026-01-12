@@ -32,7 +32,7 @@ function isInstanceFromNoStateModel(instance: unknown) {
 export function isModelKey<
   S,
   T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
+  R extends undefined | ((ins: () => T) => any) = undefined
 >(data: unknown): data is ModelKey<S, T, R> {
   if (!data) {
     return false;
@@ -46,7 +46,7 @@ export function isModelKey<
 export function isModelUsage<
   S,
   T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
+  R extends undefined | ((ins: () => T) => any) = undefined
 >(data: unknown): data is ModelUsage<Model<S, T>, R> {
   if (!data) {
     return false;

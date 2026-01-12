@@ -10,7 +10,7 @@ export function config(configuration: Config = {}) {
     S,
     T extends ModelInstance,
     D extends S,
-    R extends (instance: () => T) => any = (instance: () => T) => T
+    R extends undefined | ((instance: () => T) => any) = undefined
   >(
     modelLike: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
     state?: D
@@ -25,7 +25,7 @@ export function config(configuration: Config = {}) {
     S,
     T extends ModelInstance,
     D extends S,
-    R extends (instance: () => T) => any = (instance: () => T) => T
+    R extends undefined | ((instance: () => T) => any) = undefined
   >(
     model: Model<S, T> | ModelUsage<Model<S, T>, R>,
     state?: D
@@ -46,7 +46,7 @@ export function config(configuration: Config = {}) {
   createKey.isModelKey = ck.isModelKey;
 
   const createStores = function createStores(
-    ...modelKeys: (ModelKey | StoreIndex)[]
+    ...modelKeys: (ModelKey<any, any, any> | StoreIndex<any, any, any>)[]
   ): StoreCollection {
     return css(modelKeys, configuration);
   };
