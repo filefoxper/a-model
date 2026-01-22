@@ -89,14 +89,14 @@ export declare interface Config {
 /** createStore * */
 
 export declare interface StoreIndex<
-  M extends Model,
-  R extends undefined | ((instance: () => Instance<M>) => any) = undefined
+  M extends Model = any,
+  R extends undefined | ((instance: () => Instance<M>) => any) = any
 > {
   key: Key<M, R>;
 }
 
 export declare interface Store<
-  M extends Model,
+  M extends Model = any,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > extends StoreIndex<M, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
