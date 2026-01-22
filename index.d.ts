@@ -27,9 +27,7 @@ declare type ValidInstance<S, T extends ModelInstance> = {
       : T[K];
 };
 
-export declare type Model<S = any, T extends ModelInstance = any> = (
-  state: S
-) => ValidInstance<S, T>;
+export declare type Model = (state: any) => any;
 
 export type PickState<R extends Model> = R extends (state: infer S) => any
   ? S
@@ -57,7 +55,7 @@ export interface Token {
 export declare type Dispatch = (action: Action) => any;
 
 export declare interface Key<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > extends M {
   (s: PickState<M>): Instance<M>;
@@ -68,7 +66,7 @@ export declare interface Key<
   defaultState?: PickState<M>;
 }
 
-declare interface UpdaterStore<S = any, T extends ModelInstance = any> {
+declare interface UpdaterStore<S = any, T = any> {
   getState: () => { state: S; instance: T };
   dispatch: (action: Action) => void;
 }
@@ -89,14 +87,14 @@ export declare interface Config {
 /** createStore * */
 
 export declare interface StoreIndex<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = any
 > {
   key: Key<M, R>;
 }
 
 export declare interface Store<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > extends StoreIndex<M, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
@@ -128,16 +126,15 @@ export declare function createStore<
 /** createKey * */
 
 export declare interface ModelKey<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > extends Key<M, R> {
-  (s: PickState<M>): Instance<M>;
   createStore: <D extends PickState<M>>(initialState?: D) => Store<M, R>;
   extends: <E extends Record<string, any>>(e: E) => ModelKey<M, R> & E;
 }
 
 export declare function createKey<
-  M extends Model = any,
+  M extends Model = Model,
   D extends PickState<M>,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 >(model: M | ModelUsage<M, R>, initialState?: D): ModelKey<M, R>;
@@ -146,7 +143,7 @@ export declare function createKey<
 
 export declare interface StoreCollection {
   find: <
-    M extends Model = any,
+    M extends Model = Model,
     R extends undefined | ((instance: () => Instance<M>) => any) = undefined
   >(
     key: Key<M, R> | StoreIndex<M, R>
@@ -210,7 +207,7 @@ export interface SignalOptions {
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 declare interface SignalStore<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > extends StoreIndex<M, R> {
   getToken: () => Token;
@@ -229,7 +226,7 @@ declare interface SignalStore<
 }
 
 export declare function createSignal<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 >(store: Store<M, R>): SignalStore<M, R>;
 
@@ -264,7 +261,7 @@ declare type SelectMethod<
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 declare interface SelectorStore<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > extends StoreIndex<M, R> {
   getToken: () => Token;
@@ -277,7 +274,7 @@ declare interface SelectorOption<T = any> {
 }
 
 export declare function createSelector<
-  M extends Model = any,
+  M extends Model = Model,
   R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 >(store: Store<M, R>, opts?: SelectorOption): SelectorStore<M, R>;
 
