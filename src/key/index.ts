@@ -34,15 +34,22 @@ export function createKey<
 createKey.isModelKey = isModelKey;
 
 export function createStores(
-  modelKeys: (ModelKey<any, any, any> | StoreIndex<any, any, any>)[],
+  modelKeys: (
+    | ModelKey<any, any, any>
+    | StoreIndex<any, any, any>
+    | Key<any, any, any>
+  )[],
   config: Config = {}
 ): StoreCollection {
   const state = { destroyed: false };
   const storeUnits = modelKeys.map(modelKey => {
-    if (typeof modelKey === 'function') {
+    if (
+      typeof modelKey === 'function' &&
+      typeof modelKey.createStore === 'function'
+    ) {
       return modelKey.createStore();
     }
-    const k = modelKey.key;
+    const k = typeof modelKey === 'function' ? modelKey : modelKey.key;
     return createStore(
       k,
       'defaultState' in k ? { ...config, state: k.defaultState } : config
