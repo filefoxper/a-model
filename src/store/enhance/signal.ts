@@ -6,7 +6,7 @@ import type { Action, Dispatch, ModelInstance } from '../../updater/type';
 export function createSignal<
   S,
   T extends ModelInstance,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  R extends undefined | ((instance: () => T) => any) = undefined
 >(store: Store<S, T, R>): SignalStore<S, T, R> {
   const signalStore: {
     collection: Record<string, any>;

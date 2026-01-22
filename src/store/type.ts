@@ -38,7 +38,7 @@ export interface InstanceCache<
 export interface Key<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  R extends undefined | ((instance: () => T) => any) = undefined
 > extends Model<S, T> {
   (s: S): ValidInstance<S, T>;
   source: Model<S, T>;
@@ -51,16 +51,14 @@ export interface Key<
 export interface StoreIndex<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  R extends undefined | ((instance: () => T) => any) = undefined
 > {
   key: Key<S, T, R>;
 }
 
 export type ModelUsage<
   M extends Model,
-  R extends (instance: () => Instance<M>) => any = (
-    instance: () => Instance<M>
-  ) => Instance<M>
+  R extends undefined | ((instance: () => Instance<M>) => any) = undefined
 > = M & {
   createKey: (state?: PickState<M>) => ModelKey<PickState<M>, Instance<M>, R>;
   createStore: (state?: PickState<M>) => Store<PickState<M>, Instance<M>, R>;
@@ -79,11 +77,13 @@ export type ModelUsage<
 export interface Store<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  R extends undefined | ((instance: () => T) => any) = undefined
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher?: Dispatch) => () => void;
   updater: Updater<S, T>;
-  getInstance: () => ReturnType<R>;
+  getInstance: () => R extends undefined
+    ? T
+    : ReturnType<R extends undefined ? never : R>;
   getStoreInstance: () => T;
   update: (args?: {
     model?: Model<S, T>;
@@ -108,7 +108,7 @@ export interface SignalOptions {
 export interface SignalStore<
   S = any,
   T extends ModelInstance = any,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  R extends undefined | ((instance: () => T) => any) = undefined
 > extends StoreIndex<S, T, R> {
   subscribe: (dispatcher: Dispatch) => () => void;
   getSignal: () => {

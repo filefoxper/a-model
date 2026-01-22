@@ -96,10 +96,14 @@ function createUpdateFn<S, T extends ModelInstance>(
 
 const lazyModel = createNoStateModel();
 
-export function createUpdater<S, T extends ModelInstance>(
+export function createUpdater<
+  S,
+  T extends ModelInstance,
+  W extends undefined | ((ins: () => T) => any) = undefined
+>(
   model: Model<S, T>,
   middleWare: MiddleWare,
-  config: StateConfig<S> = {}
+  config: StateConfig<S, W> = {}
 ): Updater<S, T> {
   const hasDefaultState = 'state' in config;
   const { controlled, state: defaultState } = config;

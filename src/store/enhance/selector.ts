@@ -4,7 +4,7 @@ import type { SelectorOption, Store } from '../type';
 export function createSelector<
   S,
   T extends ModelInstance,
-  R extends (instance: () => T) => any = (instance: () => T) => T
+  R extends undefined | ((instance: () => T) => any) = undefined
 >(store: Store<S, T, R>, opts?: SelectorOption) {
   const { equality } = opts ?? {};
   const selectStore: {
@@ -13,14 +13,32 @@ export function createSelector<
     selectedInstance: store.getInstance()
   };
   const cache: {
-    selector?: (instance: () => ReturnType<R>) => any;
+    selector?: (
+      instance: () => R extends undefined
+        ? T
+        : ReturnType<R extends undefined ? never : R>
+    ) => any;
     equality?: (c: any, n: any) => boolean;
     setSelect: (
-      selector: ((instance: () => ReturnType<R>) => any) | undefined
+      selector:
+        | ((
+            instance: () => R extends undefined
+              ? T
+              : ReturnType<R extends undefined ? never : R>
+          ) => any)
+        | undefined
     ) => void;
   } = {
     equality,
-    setSelect(selector: ((instance: () => ReturnType<R>) => any) | undefined) {
+    setSelect(
+      selector:
+        | ((
+            instance: () => R extends undefined
+              ? T
+              : ReturnType<R extends undefined ? never : R>
+          ) => any)
+        | undefined
+    ) {
       cache.selector = selector;
       if (!selector) {
         return;
@@ -38,7 +56,9 @@ export function createSelector<
   };
 
   const generateSelectedInstance = function generateSelectedInstance(
-    getInstance: () => ReturnType<R>
+    getInstance: () => R extends undefined
+      ? T
+      : ReturnType<R extends undefined ? never : R>
   ): any {
     if (cache.selector) {
       return cache.selector(getInstance);
@@ -67,13 +87,27 @@ export function createSelector<
     };
   };
 
-  function select(): ReturnType<R>;
-  function select<C extends (instance: () => ReturnType<R>) => any>(
-    selector: C
-  ): ReturnType<C>;
-  function select<C extends (instance: () => ReturnType<R>) => any>(
+  function select(): R extends undefined
+    ? T
+    : ReturnType<R extends undefined ? never : R>;
+  function select<
+    C extends (
+      instance: () => R extends undefined
+        ? T
+        : ReturnType<R extends undefined ? never : R>
+    ) => any
+  >(selector: C): ReturnType<C>;
+  function select<
+    C extends (
+      instance: () => R extends undefined
+        ? T
+        : ReturnType<R extends undefined ? never : R>
+    ) => any
+  >(
     selector?: C
-  ): ReturnType<R> | ReturnType<C> {
+  ):
+    | (R extends undefined ? T : ReturnType<R extends undefined ? never : R>)
+    | ReturnType<C> {
     cache.setSelect(selector);
     return selectStore.selectedInstance;
   }

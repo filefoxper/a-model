@@ -12,7 +12,7 @@ import type {
 export function createKey<
   S,
   T extends ModelInstance,
-  R extends (ins: () => T) => any = (ins: () => T) => T
+  R extends undefined | ((ins: () => T) => any) = undefined
 >(
   model: Model<S, T> | Key<S, T, R> | ModelUsage<Model<S, T>, R>,
   config: StateConfig<S, R> = {}
@@ -34,7 +34,7 @@ export function createKey<
 createKey.isModelKey = isModelKey;
 
 export function createStores(
-  modelKeys: (ModelKey | StoreIndex)[],
+  modelKeys: (ModelKey<any, any, any> | StoreIndex<any, any, any>)[],
   config: Config = {}
 ): StoreCollection {
   const state = { destroyed: false };
@@ -52,7 +52,7 @@ export function createStores(
     find<
       S,
       T extends ModelInstance,
-      R extends (ins: () => T) => any = (ins: () => T) => T
+      R extends undefined | ((ins: () => T) => any) = undefined
     >(key: Key<S, T, R> | StoreIndex<S, T, R>): Store<S, T, R> | null {
       const found = storeUnits.find(c => {
         if (typeof key === 'function') {
@@ -65,7 +65,7 @@ export function createStores(
       }
       return found as unknown as Store<S, T, R>;
     },
-    update(...keys: (ModelKey | StoreIndex)[]) {
+    update(...keys: (ModelKey<any, any, any> | StoreIndex<any, any, any>)[]) {
       if (state.destroyed) {
         return;
       }
