@@ -5,7 +5,7 @@ import type { Config, Model, ModelInstance } from './updater/type';
 import type { Key, ModelUsage, Store, StoreIndex } from './store/type';
 import type { ModelKey, StoreCollection } from './key/type';
 
-export function config(configuration: Config = {}) {
+export const config = function config(configuration: Config = {}) {
   const createStore = function createStore<
     S,
     T extends ModelInstance,
@@ -58,11 +58,7 @@ export function config(configuration: Config = {}) {
     createStores,
     model
   };
-}
-
-const { createStore, createKey, createStores, model } = config();
-
-export { createStore, createKey, createStores, model };
+};
 
 export { createSignal, createSelector } from './store';
 

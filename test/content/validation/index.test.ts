@@ -1,4 +1,6 @@
-import { validations, createStore } from '../../../src';
+import { validations, config } from '../../../src';
+
+const { createStore } = config();
 
 const counter = function counter(state: number) {
   return {
@@ -45,5 +47,24 @@ describe('验证对象是否为库', () => {
 
   test('如被验证对象不为库对象，返回 false', () => {
     expect(validations.isModelStore({})).toBe(false);
+  });
+});
+
+describe('验证当前获取的store版本是否为最新版本', () => {
+  test('通过store.getToken()获取当前版本，通过token的isDifferent方法可以验证当前行为是否为最新行为', () => {
+    const store = createStore(counter, 0);
+    const startToken = store.getToken();
+    const instance = store.getInstance();
+    instance.increase();
+    const endToken = store.getToken();
+    expect(startToken.isDifferent(endToken)).toBe(true);
+  });
+});
+
+describe('验证库是否已销毁', () => {
+  test('通过 store.isDestroyed 方法可以检查库是否已销毁', () => {
+    const store = createStore(counter, 0);
+    store.destroy();
+    expect(store.isDestroyed()).toBe(true);
   });
 });
