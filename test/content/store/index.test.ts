@@ -2,13 +2,12 @@ import {
   validations,
   config,
   createSignal,
-  model,
   createSelector
 } from '../../../src';
 import { noop } from '../../../src/tools';
 import type { Action, Dispatch, MiddleWare } from '../../../index';
 
-const { createKey, createStore } = config();
+const { createKey, createStore, model } = config();
 
 const counter = function counter(state: number) {
   return {

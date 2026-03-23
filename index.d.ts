@@ -117,12 +117,6 @@ export declare interface Store<
   extends: <E extends Record<string, any>>(e: E) => Store<M, R> & E;
 }
 
-export declare function createStore<
-  M extends Model,
-  D extends PickState<M>,
-  R extends undefined | ((instance: () => Instance<M>) => any) = undefined
->(model: M | Key<M, R> | ModelUsage<M, R>, state?: D): Store<M, R>;
-
 /** createKey * */
 
 export declare interface ModelKey<
@@ -132,12 +126,6 @@ export declare interface ModelKey<
   createStore: <D extends PickState<M>>(initialState?: D) => Store<M, R>;
   extends: <E extends Record<string, any>>(e: E) => ModelKey<M, R> & E;
 }
-
-export declare function createKey<
-  M extends Model = Model,
-  D extends PickState<M>,
-  R extends undefined | ((instance: () => Instance<M>) => any) = undefined
->(model: M | ModelUsage<M, R>, initialState?: D): ModelKey<M, R>;
 
 /** createStores * */
 
@@ -152,10 +140,6 @@ export declare interface StoreCollection {
   keys: () => Key[];
   destroy: () => void;
 }
-
-export declare function createStores(
-  ...modelKeys: (ModelKey<any, any> | StoreIndex<any, any>)[]
-): StoreCollection;
 
 /** model API * */
 
@@ -177,7 +161,7 @@ export declare type ModelUsage<
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export declare interface model {
+declare interface model {
   <M extends Model>(modelFn: M): ModelUsage<M, undefined>;
   <M extends Model, R extends (instance: () => Instance<M>) => any>(
     modelFn: M,

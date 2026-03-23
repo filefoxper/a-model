@@ -43,7 +43,9 @@ Create store:
 ```js
 // store.js
 import {counting} from './model';
-import {createStore} from 'as-model';
+import {config} from 'as-model';
+
+const {createStore} = config();
 
 // Create and initialize a model store.
 const store = createStore(counting, 0); 
@@ -59,7 +61,9 @@ Create multiple stores:
 
 ```js
 import {counting} from './model';
-import {createKey, createStores} from 'as-model';
+import {config} from 'as-model';
+
+const {createKey, createStores} = config();
 
 // Create model key with initial state.
 const countingKey0 = createKey(counting, 0);
@@ -79,7 +83,9 @@ Use **model** API to create store or key.
 
 ```js
 import {counting} from './model';
-import {model} from 'as-model';
+import {config} from 'as-model';
+
+const {model} = config();
 
 const store = model(counting).createStore(0);
 const key = model(counting).createKey(0);
@@ -90,7 +96,9 @@ In typescript develop environment, `model` API can do a type check for making su
 
 ```js
 // ts
-import {model} from 'as-model';
+import {config} from 'as-model';
+
+const {model} = config();
 
 // The model api ensures every action method returns a same type value with model state.
 const counting = model((state: number)=>{
@@ -115,7 +123,9 @@ Subscribe store
 
 ```js
 import {counting} from './model';
-import {model} from 'as-model';
+import {config} from 'as-model';
+
+const {model} = config();
 
 const store = model(counting).createStore(0);
 const {getInstance} = store;
@@ -132,7 +142,9 @@ Want to use async operations?
 
 ```js
 import {counting} from './model';
-import {model, createSelector} from 'as-model';
+import {config, createSelector} from 'as-model';
+
+const {model} = config();
 
 const store = model(counting).select((getInstance)=>{
     const instance = getInstance();
@@ -163,7 +175,7 @@ select().count // 1
 Subscribe store in react hooks:
 
 ```js
-import {model, createStores} from 'as-model';
+import {config} from 'as-model';
 import {
     createContext, 
     useRef, 
@@ -171,6 +183,8 @@ import {
     useEffect, 
     useContext
 } from 'react';
+
+const {model, createStores} = config();
 
 // Local state management
 function useModel(modelFn, defaultState){
@@ -283,7 +297,33 @@ npm install as-model
 
 ## Simplify API
 
-### createStore
+### config
+
+```js
+function config(options):configAPI
+```
+
+#### parameters
+
+##### options - (Optional) an object with the following properties:
+* notify - (Optional) a callback function for noticing an action to every subscriber, it accepts a notifier function and an action as parameters.
+* controlled - (Optional) a boolean state to tell as-model use controlled mode to output instance changes.
+* middleWares - (Optional) a middleWare array for reproducing state or ignore actions.
+
+#### return
+
+All apis above except `createSignal` and `createSelector` API.
+
+```js
+{
+    createStore: (modelFnOrKey, initialState?)=>store,
+    createKey: (modelFn, initialState?)=>key,
+    createStores: (...keys)=>stores,
+    model: (modelFn)=>ModelUsage
+}
+```
+
+### config(...).createStore
 
 ```js
 function createStore(modelFnOrKey, initialState?):store
@@ -317,7 +357,7 @@ A store object with model key and methods. The store object has `getInstance` me
 }
 ```
 
-### createKey
+### config(...).createKey
 
 ```js
 function createKey(modelFn, initialState?):key
@@ -340,7 +380,7 @@ A model key function with `createStore` method to create a store with the model 
 }
 ```
 
-### createStores
+### config(...).createStores
 
 ```js
 function createStores(...keys):StoreCollection
@@ -360,6 +400,32 @@ StoreCollection created by the model keys.
 {
     find: (key)=>store,
     destroy: ()=>void
+}
+```
+
+### config(...).model
+
+```js
+function model(modelFn):ModelUsage
+```
+
+#### parameters
+
+* modelFn - a model function accepts a state parameter and returns an object with action methods.
+
+#### return
+
+ModelUsage object with `createStore`, `createKey` methods to create store, key for the model function, and `select` method to set a default selector function (Use `createSelector(store).select()` to select the default one).
+
+**ModelUsage** structure:
+
+```js
+{
+    createStore: (initialState?)=> store,
+    createKey: (initialState?)=> key,
+    select: (
+      selector:(getInstance:()=>Instance)=>Record<string, any>|Array<any>
+    )=>ModelUsage 
 }
 ```
 
@@ -431,59 +497,6 @@ function createSelector(store, opts?:SelectorOptions):SelectorStore
     key: modelKey,
  }
  ```
-
-
-### model
-
-```js
-function model(modelFn):ModelUsage
-```
-
-#### parameters
-
-* modelFn - a model function accepts a state parameter and returns an object with action methods.
-
-#### return
-
-ModelUsage object with `createStore`, `createKey` methods to create store, key for the model function, and `select` method to set a default selector function (Use `createSelector(store).select()` to select the default one). 
-
-**ModelUsage** structure:
-
-```js
-{
-    createStore: (initialState?)=> store,
-    createKey: (initialState?)=> key,
-    select: (
-      selector:(getInstance:()=>Instance)=>Record<string, any>|Array<any>
-    )=>ModelUsage 
-}
-```
-
-### config
-
-```js
-function config(options):configAPI
-```
-
-#### parameters
-
-##### options - (Optional) an object with the following properties:
-* notify - (Optional) a callback function for noticing an action to every subscriber, it accepts a notifier function and an action as parameters.
-* controlled - (Optional) a boolean state to tell as-model use controlled mode to output instance changes.
-* middleWares - (Optional) a middleWare array for reproducing state or ignore actions.
-
-#### return
-
-All apis above except `createSignal` and `createSelector` API.
-
-```js
-{
-    createStore: (modelFnOrKey, initialState?)=>store,
-    createKey: (modelFn, initialState?)=>key,
-    createStores: (...keys)=>stores,
-    model: (modelFn)=>ModelUsage
-}
-```
 
 ### validations
 
