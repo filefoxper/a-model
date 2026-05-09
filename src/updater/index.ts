@@ -30,7 +30,12 @@ function createUpdateFn<S, T extends ModelInstance>(
   middleWare: MiddleWare
 ) {
   return function update(
-    args: { model?: Model<S, T>; initialState?: S; state?: S } = {}
+    args: {
+      model?: Model<S, T>;
+      initialState?: S;
+      state?: S;
+      silence?: boolean;
+    } = {}
   ) {
     updater.mutate((u, effect): Updater<S, T> => {
       const model = args.model ?? u.model;
@@ -73,16 +78,18 @@ function createUpdateFn<S, T extends ModelInstance>(
       if (Object.is(u.model, model) && Object.is(u.state, state)) {
         return u;
       }
-      effect(up => {
-        up.notify({
-          type: null,
-          method: null,
-          prevInstance: u.instance,
-          instance: u.instance,
-          prevState: u.state,
-          state
+      if (!args.silence) {
+        effect(up => {
+          up.notify({
+            type: null,
+            method: null,
+            prevInstance: u.instance,
+            instance: u.instance,
+            prevState: u.state,
+            state
+          });
         });
-      });
+      }
       return {
         ...u,
         model,

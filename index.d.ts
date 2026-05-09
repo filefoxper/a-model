@@ -108,6 +108,7 @@ export declare interface Store<
     key?: Key<M, R>;
     initialState?: PickState<M>;
     state?: PickState<M>;
+    silence?: boolean;
   }) => void;
   destroy: () => void;
   payload: <P>(
