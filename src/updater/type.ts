@@ -110,7 +110,12 @@ export type Updater<S, T extends ModelInstance> = {
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined
   ) => P | undefined;
-  update: (args?: { model?: Model<S, T>; initialState?: S; state?: S }) => void;
+  update: (args?: {
+    model?: Model<S, T>;
+    initialState?: S;
+    state?: S;
+    silence?: boolean;
+  }) => void;
   notify: (action: Action | null) => void;
   mutate: (
     callback: (

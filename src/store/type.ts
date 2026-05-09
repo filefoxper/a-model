@@ -90,6 +90,7 @@ export interface Store<
     key?: Key<S, T, R>;
     initialState?: S;
     state?: S;
+    silence?: boolean;
   }) => void;
   destroy: () => void;
   payload: <P>(

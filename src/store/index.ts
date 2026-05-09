@@ -113,6 +113,7 @@ export function createStore<
       key?: Key<S, T, R>;
       initialState?: S;
       state?: S;
+      silence?: boolean;
     }) {
       const updateArgs = args ?? {};
       if (updateArgs.key) {

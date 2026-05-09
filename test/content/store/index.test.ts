@@ -105,6 +105,46 @@ describe('使用 createStore 创建状态库', () => {
       ]);
     });
 
+    test('通过使用库的 update 方法直接替换库模型可引起订阅函数运行', () => {
+      const subscribe = jest.fn();
+      const store = createStore(counter, 0);
+      store.subscribe(subscribe);
+      const updatedCounter = function updatedCounter(state: number) {
+        return {
+          count: state,
+          symbol: !state ? '' : state < 0 ? '-' : '+',
+          increase() {
+            return state + 2;
+          },
+          decrease() {
+            return state - 2;
+          }
+        };
+      };
+      store.update({ model: updatedCounter });
+      expect(subscribe).toBeCalledTimes(2);
+    });
+
+    test('通过对库的 update 方法添加 silence 参数静默替换库模型可避免引起订阅函数运行', () => {
+      const subscribe = jest.fn();
+      const store = createStore(counter, 0);
+      store.subscribe(subscribe);
+      const updatedCounter = function updatedCounter(state: number) {
+        return {
+          count: state,
+          symbol: !state ? '' : state < 0 ? '-' : '+',
+          increase() {
+            return state + 2;
+          },
+          decrease() {
+            return state - 2;
+          }
+        };
+      };
+      store.update({ model: updatedCounter, silence: true });
+      expect(subscribe).toBeCalledTimes(1);
+    });
+
     test('调用已初始化实例的方法，可更新状态刷新实例', () => {
       const store = createStore(counter, 0);
       const initializedInstance = store.getInstance();
