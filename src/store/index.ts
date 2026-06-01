@@ -9,6 +9,7 @@ import {
 } from './instance';
 import type { InstanceCache, Key, ModelUsage, Store } from './type';
 import type {
+  Config,
   Dispatch,
   Model,
   ModelInstance,
@@ -107,6 +108,14 @@ export function createStore<
     },
     getStoreInstance() {
       return extractInstance<S, T>(updater, undefined, propertiesCache);
+    },
+    config(customizedConfig: Config) {
+      updater.mutate(u => {
+        const { middleWares, ...rest } = customizedConfig;
+        const updaterConfig = u.config;
+        const nextUpdaterConfig = { ...updaterConfig, ...rest };
+        return { ...u, config: nextUpdaterConfig };
+      });
     },
     update(args?: {
       model?: Model<S, T>;

@@ -1,4 +1,5 @@
 import type {
+  Config,
   Dispatch,
   Instance,
   Model,
@@ -99,6 +100,7 @@ export interface Store<
   isDestroyed: () => boolean;
   modelStoreIdentifier: () => boolean;
   getToken: () => Token;
+  config: (configuration: Config) => void;
   extends: <E extends Record<string, any>>(e: E) => Store<S, T, R> & E;
 }
 
