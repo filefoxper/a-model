@@ -117,6 +117,9 @@ export function createStore<
         return { ...u, config: nextUpdaterConfig };
       });
     },
+    getConfiguration() {
+      return updater.config;
+    },
     update(args?: {
       model?: Model<S, T>;
       key?: Key<S, T, R>;

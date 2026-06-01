@@ -101,6 +101,7 @@ export interface Store<
   modelStoreIdentifier: () => boolean;
   getToken: () => Token;
   config: (configuration: Config) => void;
+  getConfiguration: () => Config;
   extends: <E extends Record<string, any>>(e: E) => Store<S, T, R> & E;
 }
 
