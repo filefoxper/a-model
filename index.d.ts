@@ -110,6 +110,7 @@ export declare interface Store<
     state?: PickState<M>;
     silence?: boolean;
   }) => void;
+  config(customizedConfig: Config);
   destroy: () => void;
   payload: <P>(
     callback?: (payload: P | undefined) => P | undefined

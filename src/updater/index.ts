@@ -25,7 +25,7 @@ function createInitializedUpdater<S, T extends ModelInstance>(
   };
 }
 
-function createUpdateFn<S, T extends ModelInstance>(
+export function createUpdateFn<S, T extends ModelInstance>(
   updater: Updater<S, T>,
   middleWare: MiddleWare
 ) {
