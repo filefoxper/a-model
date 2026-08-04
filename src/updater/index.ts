@@ -45,7 +45,7 @@ export function createUpdateFn<S, T extends ModelInstance>(
         'initialState'
       );
       const state = hasState ? (args.state as S) : u.state;
-      const isInitialize = !u.initialized || hasInitialState;
+      const isInitialize = !u.initialized;
       const token = createToken();
       if (u.controlled) {
         const controlledState =
@@ -60,6 +60,9 @@ export function createUpdateFn<S, T extends ModelInstance>(
         throw new Error(
           'The updater has not been initialized, it should be updated with a state for initializing.'
         );
+      }
+      if (u.initialized && !hasState && !args.model && hasInitialState) {
+        return u;
       }
       if (isInitialize) {
         const initialState = hasInitialState ? (args.initialState as S) : state;

@@ -105,6 +105,18 @@ describe('使用 createStore 创建状态库', () => {
       ]);
     });
 
+    test('通过使用库的 update 方法的 initialState 参数选项只能初始化一次', () => {
+      const store = createStore(counter);
+      store.update({ initialState: 0 });
+      store.getInstance().increase();
+      const initializedIncreasedCount = store.getInstance().count;
+      store.update({ initialState: 0 });
+      const updatedIncreasedCount = store.getInstance().count;
+      expect([initializedIncreasedCount, updatedIncreasedCount]).toEqual([
+        1, 1
+      ]);
+    });
+
     test('通过使用库的 update 方法直接替换库模型可引起订阅函数运行', () => {
       const subscribe = jest.fn();
       const store = createStore(counter, 0);
