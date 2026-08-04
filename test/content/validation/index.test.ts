@@ -68,3 +68,11 @@ describe('验证库是否已销毁', () => {
     expect(store.isDestroyed()).toBe(true);
   });
 });
+
+describe('验证当前对象是否为 storeIndex', () => {
+  test('通过 validations.isStoreIndex 方法可以检查库是否已销毁', () => {
+    const store = createStore(counter, 0);
+    expect(validations.isStoreIndex(store)).toBe(true);
+    store.destroy();
+  });
+});
