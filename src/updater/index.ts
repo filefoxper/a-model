@@ -46,7 +46,7 @@ export function createUpdateFn<S, T extends ModelInstance>(
       );
       const state = hasState ? (args.state as S) : u.state;
       const isSilence = !!args.silence;
-      const isInitialize = !u.initialized;
+      const isInitialize = !u.initialized || (hasInitialState && !u.fixed);
       const token = createToken();
       if (u.controlled) {
         const controlledState =
@@ -62,31 +62,28 @@ export function createUpdateFn<S, T extends ModelInstance>(
           'The updater has not been initialized, it should be updated with a state for initializing.'
         );
       }
-      if (u.initialized && !hasState && !args.model && hasInitialState) {
+      if (
+        u.initialized &&
+        !hasState &&
+        !args.model &&
+        hasInitialState &&
+        u.fixed
+      ) {
         return u;
       }
       if (isInitialize) {
         const initialState = hasInitialState ? (args.initialState as S) : state;
         const instance = model(initialState);
         const initializedUpdater = createInitializedUpdater(u, middleWare);
-        return isSilence
-          ? {
-              ...u,
-              model,
-              state: initialState,
-              instance,
-              token,
-              ...initializedUpdater
-            }
-          : {
-              ...u,
-              model,
-              state: initialState,
-              instance,
-              initialized: true,
-              token,
-              ...initializedUpdater
-            };
+        return {
+          ...u,
+          model,
+          state: initialState,
+          instance,
+          initialized: true,
+          token,
+          ...initializedUpdater
+        };
       }
       if (Object.is(u.model, model) && Object.is(u.state, state)) {
         return u;
@@ -145,6 +142,7 @@ export function createUpdater<
     cacheFields: {},
     state: defaultState as S,
     initialized: hasDefaultState,
+    fixed: false,
     controlled: !!controlled,
     isSubscribing: false,
     config,

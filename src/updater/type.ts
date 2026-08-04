@@ -105,6 +105,7 @@ export type Updater<S, T extends ModelInstance> = {
   >;
   cacheMethods: Record<string, (...args: unknown[]) => unknown>;
   initialized: boolean;
+  fixed: boolean;
   state: S;
   config: Config;
   payload: <P>(
