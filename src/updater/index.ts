@@ -45,6 +45,7 @@ export function createUpdateFn<S, T extends ModelInstance>(
         'initialState'
       );
       const state = hasState ? (args.state as S) : u.state;
+      const isSilence = !!args.silence;
       const isInitialize = !u.initialized;
       const token = createToken();
       if (u.controlled) {
@@ -68,15 +69,24 @@ export function createUpdateFn<S, T extends ModelInstance>(
         const initialState = hasInitialState ? (args.initialState as S) : state;
         const instance = model(initialState);
         const initializedUpdater = createInitializedUpdater(u, middleWare);
-        return {
-          ...u,
-          model,
-          state: initialState,
-          instance,
-          initialized: true,
-          token,
-          ...initializedUpdater
-        };
+        return isSilence
+          ? {
+              ...u,
+              model,
+              state: initialState,
+              instance,
+              token,
+              ...initializedUpdater
+            }
+          : {
+              ...u,
+              model,
+              state: initialState,
+              instance,
+              initialized: true,
+              token,
+              ...initializedUpdater
+            };
       }
       if (Object.is(u.model, model) && Object.is(u.state, state)) {
         return u;
