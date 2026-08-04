@@ -101,6 +101,9 @@ export function generateTunnelCreator<S, T extends ModelInstance>(
     });
   }
   return function tunnel(dispatchFn: Dispatch) {
+    updater.mutate(u => {
+      return { ...u, fixed: true };
+    });
     function disconnect() {
       updater.mutate(u => {
         const { dispatches: ds, temporaryDispatches: tds } = u;

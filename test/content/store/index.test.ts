@@ -105,15 +105,26 @@ describe('使用 createStore 创建状态库', () => {
       ]);
     });
 
-    test('通过使用库的 update 方法的 initialState 参数选项只能初始化一次', () => {
+    test('通过使用库的 update 方法的 initialState 参数选项可初始化多次', () => {
       const store = createStore(counter);
       store.update({ initialState: 0 });
-      store.getInstance().increase();
       const initializedIncreasedCount = store.getInstance().count;
-      store.update({ initialState: 0 });
+      store.update({ initialState: 1 });
       const updatedIncreasedCount = store.getInstance().count;
       expect([initializedIncreasedCount, updatedIncreasedCount]).toEqual([
-        1, 1
+        0, 1
+      ]);
+    });
+
+    test('通过使用库的 update 方法的 initialState 参数选项可初始化多次，直到 subscribe 发生', () => {
+      const store = createStore(counter);
+      store.update({ initialState: 0 });
+      store.subscribe();
+      const initializedIncreasedCount = store.getInstance().count;
+      store.update({ initialState: 1 });
+      const updatedIncreasedCount = store.getInstance().count;
+      expect([initializedIncreasedCount, updatedIncreasedCount]).toEqual([
+        0, 0
       ]);
     });
 
